@@ -1,0 +1,169 @@
+<UserControl x:Class="GamingLiveTranslator.Views.Controls.ProviderApiKeyCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:GamingLiveTranslator.ViewModels"
+             xmlns:models="clr-namespace:GamingLiveTranslator.Models"
+             xmlns:util="clr-namespace:GamingLiveTranslator.Utilities"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:ProviderCredentialViewModel}">
+    <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20">
+        <StackPanel>
+            <TextBlock Text="{Binding SectionTitle}" Style="{StaticResource TextCardTitle}" />
+            <TextBlock Text="{Binding KeyLabel}" Style="{StaticResource TextHeader2}" Margin="0,0,0,16" />
+
+            <!-- API Key Input Field -->
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Text="{Binding KeyLabel, StringFormat='{}{0}:'}" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                <Grid HorizontalAlignment="Left" Width="480">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Masked Input (PasswordBox) -->
+                    <PasswordBox Grid.Column="0"
+                                 util:PasswordBoxHelper.BindPassword="True"
+                                 util:PasswordBoxHelper.BoundPassword="{Binding ApiKeyInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="{StaticResource CardElevatedBackgroundBrush}"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 BorderBrush="{StaticResource BorderBrush}"
+                                 BorderThickness="1"
+                                 Padding="12,10"
+                                 FontSize="13">
+                        <PasswordBox.Style>
+                            <Style TargetType="PasswordBox">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsKeyVisible}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </PasswordBox.Style>
+                    </PasswordBox>
+
+                    <!-- Plain Visible Input (TextBox) -->
+                    <TextBox Grid.Column="0"
+                             Text="{Binding ApiKeyInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Background="{StaticResource CardElevatedBackgroundBrush}"
+                             Foreground="{StaticResource TextPrimaryBrush}"
+                             BorderBrush="{StaticResource BorderBrush}"
+                             BorderThickness="1"
+                             Padding="12,10"
+                             FontSize="13">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsKeyVisible}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+
+                    <!-- Show/Hide Toggle Button -->
+                    <Button Grid.Column="1"
+                            Command="{Binding ToggleKeyVisibilityCommand}"
+                            Style="{StaticResource SecondaryActionButtonStyle}"
+                            Margin="8,0,0,0"
+                            Padding="14,8">
+                        <TextBlock>
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Show" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsKeyVisible}" Value="True">
+                                            <Setter Property="Text" Value="Hide" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
+                </Grid>
+                <TextBlock Text="{Binding HelpText}"
+                           Style="{StaticResource TextSubtitle}" FontSize="11" Margin="0,6,0,0" />
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,20">
+                <Button Content="Test Connection"
+                        Command="{Binding TestConnectionCommand}"
+                        Style="{StaticResource PrimaryActionButtonStyle}"
+                        Margin="0,0,10,0" />
+
+                <Button Content="Save Key"
+                        Command="{Binding SaveCommand}"
+                        Style="{StaticResource SecondaryActionButtonStyle}"
+                        Margin="0,0,10,0" />
+
+                <Button Content="Clear Key"
+                        Command="{Binding ClearKeyCommand}"
+                        Style="{StaticResource SecondaryActionButtonStyle}" />
+            </StackPanel>
+
+            <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
+
+            <!-- Connection Status Badge -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Status:" Style="{StaticResource TextSubtitle}" VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                <!-- Status Dot -->
+                <Ellipse VerticalAlignment="Center">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse" BasedOn="{StaticResource StatusDotStyle}">
+                            <Setter Property="Fill" Value="{StaticResource TextMutedBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ConnectionStatus}" Value="{x:Static models:ConnectionStatus.Connected}">
+                                    <Setter Property="Fill" Value="{StaticResource StatusConnectedBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ConnectionStatus}" Value="{x:Static models:ConnectionStatus.Failed}">
+                                    <Setter Property="Fill" Value="{StaticResource StatusDisconnectedBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ConnectionStatus}" Value="{x:Static models:ConnectionStatus.Testing}">
+                                    <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+
+                <!-- Status Title -->
+                <TextBlock FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="Not tested" />
+                            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ConnectionStatus}" Value="{x:Static models:ConnectionStatus.Connected}">
+                                    <Setter Property="Text" Value="Connected" />
+                                    <Setter Property="Foreground" Value="{StaticResource StatusConnectedBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ConnectionStatus}" Value="{x:Static models:ConnectionStatus.Failed}">
+                                    <Setter Property="Text" Value="Failed" />
+                                    <Setter Property="Foreground" Value="{StaticResource StatusDisconnectedBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ConnectionStatus}" Value="{x:Static models:ConnectionStatus.Testing}">
+                                    <Setter Property="Text" Value="Testing..." />
+                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- Status Reason Chip -->
+                <Border Background="{StaticResource CardHoverBackgroundBrush}" CornerRadius="4" Padding="8,3" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ConnectionStatusMessage}"
+                               FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+                </Border>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,215 @@
+<UserControl x:Class="GamingLiveTranslator.Views.OverlayView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:GamingLiveTranslator.ViewModels"
+             Padding="28"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:OverlayViewModel}"
+             d:DesignHeight="750" d:DesignWidth="850">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="800" HorizontalAlignment="Left">
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="In-Game HUD Overlay" Style="{StaticResource TextHeader1}" />
+                <TextBlock Text="Manage transparency, live subtitle positioning, font size, and click-through mode."
+                           Style="{StaticResource TextSubtitle}" Margin="0,6,0,0" />
+            </StackPanel>
+
+            <!-- Card 1: Master Activation & Mode -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="OVERLAY ACTIVATION &amp; INPUT MODE" Style="{StaticResource TextCardTitle}" Margin="0,0,0,16" />
+
+                    <!-- Enable Overlay Toggle -->
+                    <DockPanel LastChildFill="False" Margin="0,0,0,14">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Enable In-Game Overlay" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="Displays a transparent, always-on-top subtitle window over your game."
+                                       FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <CheckBox DockPanel.Dock="Right"
+                                  IsChecked="{Binding IsOverlayEnabled}"
+                                  VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,4,0,14" />
+
+                    <!-- Click-through Mode Toggle -->
+                    <DockPanel LastChildFill="False" Margin="0,0,0,10">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Click-Through Mode (WS_EX_TRANSPARENT)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="Allows all mouse clicks to pass through the overlay directly into the game."
+                                       FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <CheckBox DockPanel.Dock="Right"
+                                  IsChecked="{Binding IsClickThrough}"
+                                  VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <!-- Click-through Notice -->
+                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,10"
+                            Margin="0,4,0,0">
+                        <TextBlock Text="ℹ Note: When Click-Through is enabled, the overlay cannot be dragged or resized with the mouse. Uncheck Click-Through here to reposition it. (Global hotkey toggle will be added in Phase 8)."
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 2: Visual Styling & Typography -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="VISUAL APPEARANCE &amp; SIZING" Style="{StaticResource TextCardTitle}" Margin="0,0,0,16" />
+
+                    <!-- Opacity Slider -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Card Opacity" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Opacity, StringFormat={}{0:P0}}"
+                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+
+                        <Slider Grid.Row="1" Grid.ColumnSpan="2"
+                                Minimum="0.2" Maximum="1.0"
+                                SmallChange="0.05" LargeChange="0.1"
+                                Value="{Binding Opacity}"
+                                Margin="0,8,0,0" />
+                    </Grid>
+
+                    <!-- Font Size Slider -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Subtitle Font Size" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding FontSize, StringFormat={}{0:F0} pt}"
+                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+
+                        <Slider Grid.Row="1" Grid.ColumnSpan="2"
+                                Minimum="11" Maximum="24"
+                                SmallChange="1" LargeChange="2"
+                                Value="{Binding FontSize}"
+                                Margin="0,8,0,0" />
+                    </Grid>
+
+                    <!-- Position Reset -->
+                    <DockPanel LastChildFill="False" Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Window Position &amp; Placement" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="Drag the top bar of the overlay while click-through is OFF, or reset to default bottom-center."
+                                       FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <Button DockPanel.Dock="Right"
+                                Content="Reset Position"
+                                Command="{Binding ResetPositionCommand}"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Padding="14,6" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 3: Stream Timing & Limits -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="SUBTITLE DISPLAY RULES &amp; LIMITS" Style="{StaticResource TextCardTitle}" Margin="0,0,0,16" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="220" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Message Duration (Auto-Fade)" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="Automatically removes subtitles after this period without altering main session history."
+                                       FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailableDurations}"
+                                  SelectedItem="{Binding SelectedDuration}"
+                                  ItemStringFormat="{}{0} seconds"
+                                  Background="{StaticResource CardElevatedBackgroundBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  BorderBrush="{StaticResource BorderBrush}"
+                                  Padding="8,6"
+                                  FontSize="13" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="220" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Maximum Visible Subtitles" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="Oldest subtitles are removed first when new phrases arrive."
+                                       FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailableMaxMessages}"
+                                  SelectedItem="{Binding SelectedMaxMessages}"
+                                  ItemStringFormat="{}{0} messages"
+                                  Background="{StaticResource CardElevatedBackgroundBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  BorderBrush="{StaticResource BorderBrush}"
+                                  Padding="8,6"
+                                  FontSize="13" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 4: Game Graphics Compatibility Warning -->
+            <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                    BorderBrush="{StaticResource StatusWarningBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16,14"
+                    Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="⚠" FontSize="20" Foreground="{StaticResource StatusWarningBrush}" Margin="0,0,12,0" VerticalAlignment="Top" />
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="IMPORTANT: Game Display Mode Requirement"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource StatusWarningBrush}" />
+                        <TextBlock Text="For the overlay to be visible over your game, please run the game in 'Borderless Windowed', 'Windowed Fullscreen', or 'Windowed' mode. Games set to 'Exclusive Fullscreen' bypass Windows DWM compositing and prevent any overlay application from rendering on top."
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

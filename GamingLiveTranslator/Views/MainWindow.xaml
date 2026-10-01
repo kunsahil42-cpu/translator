@@ -1,0 +1,143 @@
+<Window x:Class="GamingLiveTranslator.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:GamingLiveTranslator.ViewModels"
+        xmlns:views="clr-namespace:GamingLiveTranslator.Views"
+        mc:Ignorable="d"
+        Title="Gaming Live Translator"
+        Height="720" Width="1160"
+        MinHeight="600" MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBackgroundBrush}">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TranslatorViewModel}">
+            <views:TranslatorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OverlayViewModel}">
+            <views:OverlayView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Navigation Sidebar -->
+        <Border Grid.Column="0"
+                Background="{StaticResource SidebarBackgroundBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,1,0"
+                Padding="16,20">
+            <DockPanel LastChildFill="True">
+
+                <!-- Top Brand Header -->
+                <StackPanel DockPanel.Dock="Top" Margin="4,0,0,28">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="36" Height="36"
+                                CornerRadius="8"
+                                Background="{StaticResource AccentGlowBrush}"
+                                BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1.5"
+                                Margin="0,0,10,0">
+                            <TextBlock Text="⚡" FontSize="18"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="LIVE TRANSLATE"
+                                       FontFamily="{StaticResource AppFontFamily}"
+                                       FontSize="15" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="GAMING HUD"
+                                       FontFamily="{StaticResource AppFontFamily}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Bottom Footer / Version Info -->
+                <Border DockPanel.Dock="Bottom"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12,10"
+                        Margin="0,16,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Style="{StaticResource StatusDotStyle}" Fill="{StaticResource StatusConnectedBrush}" />
+                            <TextBlock Text="Engine v1.0.0"
+                                       FontFamily="{StaticResource AppFontFamily}"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                        </StackPanel>
+                        <TextBlock Text="Phase 6 HUD Overlay"
+                                   FontFamily="{StaticResource AppFontFamily}"
+                                   FontSize="10"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="16,2,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigation Links List -->
+                <StackPanel VerticalAlignment="Top">
+                    <TextBlock Text="NAVIGATION"
+                               FontFamily="{StaticResource AppFontFamily}"
+                               FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Margin="8,0,0,8" />
+
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Command="{Binding NavigateToDashboardCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📊" Margin="0,0,10,0" />
+                            <TextBlock Text="Dashboard" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Command="{Binding NavigateToTranslatorCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🌐" Margin="0,0,10,0" />
+                            <TextBlock Text="Live Translator" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Command="{Binding NavigateToOverlayCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🖥" Margin="0,0,10,0" />
+                            <TextBlock Text="HUD Overlay" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Command="{Binding NavigateToSettingsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙" Margin="0,0,10,0" />
+                            <TextBlock Text="Settings" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+            </DockPanel>
+        </Border>
+
+        <!-- Right Content Area: Swappable Views via DataTemplates -->
+        <ContentControl Grid.Column="1"
+                        Content="{Binding CurrentView}"
+                        Focusable="False" />
+    </Grid>
+</Window>

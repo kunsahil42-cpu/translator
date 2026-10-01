@@ -1,0 +1,1023 @@
+﻿<UserControl x:Class="GamingLiveTranslator.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:GamingLiveTranslator.ViewModels"
+             xmlns:controls="clr-namespace:GamingLiveTranslator.Views.Controls"
+             xmlns:trans="clr-namespace:GamingLiveTranslator.Services.Translation"
+             xmlns:util="clr-namespace:GamingLiveTranslator.Utilities"
+             Padding="28"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+             d:DesignHeight="1150" d:DesignWidth="850">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="850" HorizontalAlignment="Stretch">
+
+            <!-- Page Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="Application Settings" Style="{StaticResource TextHeader1}" />
+                <TextBlock Text="Manage cloud credentials, translation engines, microphone devices, and language preferences."
+                           Style="{StaticResource TextSubtitle}" Margin="0,6,0,0" />
+            </StackPanel>
+
+            <!-- Card 1: Speech Recognition (Deepgram) Credential Card -->
+            <controls:ProviderApiKeyCard DataContext="{Binding DeepgramCredentialVM}" />
+
+            <!-- Card 2: Translation Providers (Quota-Aware Fallback Pool) -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="TRANSLATION PROVIDERS (QUOTA-AWARE FALLBACK POOL)" Style="{StaticResource TextCardTitle}" Margin="0,0,0,8" />
+                    <TextBlock Text="Configure your genuine translation provider accounts (e.g. Google Cloud, Lecto, Argos Offline). The application evaluates providers in priority order, automatically falling back if an active provider encounters a rate limit (HTTP 429) or estimated monthly limit."
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                    <TextBlock Text="ℹ Estimated usage this period: Character counts are estimated based on local application activity (not an authoritative provider balance)."
+                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                    <!-- Pool List -->
+                    <ItemsControl ItemsSource="{Binding TranslationProviders}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="14,12"
+                                        Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Priority Number -->
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayPriority}"
+                                                   FontWeight="Bold" FontSize="14"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,12,0" />
+
+                                        <!-- Details: Label, Type Badge, and Usage -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Label}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,0" />
+                                                <Border Background="{StaticResource BorderBrush}" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding TypeBadge}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding UsageSummaryText}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0" />
+                                        </StackPanel>
+
+                                        <!-- Enable / Disable Toggle -->
+                                        <Button Grid.Column="2"
+                                                Content="{Binding StatusToggleText}"
+                                                Command="{Binding ToggleEnabledCommand}"
+                                                Padding="10,4"
+                                                Margin="0,0,12,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="11">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEnabled}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource StatusConnectedBrush}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                                            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Reorder & Action Controls -->
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="▲"
+                                                    Command="{Binding MoveUpCommand}"
+                                                    ToolTip="Increase Priority"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                                    Padding="8,4" Margin="0,0,4,0" FontSize="11" />
+
+                                            <Button Content="▼"
+                                                    Command="{Binding MoveDownCommand}"
+                                                    ToolTip="Decrease Priority"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                                    Padding="8,4" Margin="0,0,4,0" FontSize="11" />
+
+                                            <Button Content="↺ Reset"
+                                                    Command="{Binding ResetUsageCommand}"
+                                                    ToolTip="Reset estimated usage counter for this period"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                                    Padding="8,4" Margin="0,0,4,0" FontSize="11" />
+
+                                            <Button Content="✕"
+                                                    Command="{Binding DeleteCommand}"
+                                                    ToolTip="Remove Provider"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                                    Padding="8,4" FontSize="11" Foreground="{StaticResource StatusDisconnectedBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Add Provider Button (shown when not adding) -->
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                Visibility="{Binding IsNotAddingProvider, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Button Content="+ Add Provider"
+                                Command="{Binding ShowAddProviderCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Padding="16,8" Margin="0,0,12,0" />
+                        <TextBlock Text="Use ▲ / ▼ buttons to adjust priority order."
+                                   Style="{StaticResource TextSubtitle}" FontSize="12" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Add Provider Panel (shown when adding) -->
+                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                            BorderBrush="{StaticResource AccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="16"
+                            Margin="0,12,0,0"
+                            Visibility="{Binding IsAddingProvider, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="ADD TRANSLATION PROVIDER" Style="{StaticResource TextCardTitle}" Margin="0,0,0,12" />
+
+                            <!-- Provider Type Selection -->
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Provider Type:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Content="Google Cloud Translation"
+                                                 IsChecked="{Binding IsNewGoogleSelected}"
+                                                 GroupName="NewProviderTypeGroup"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 FontSize="12" FontWeight="SemiBold"
+                                                 Margin="0,0,16,0" />
+                                    <RadioButton Content="Lecto Translation (RapidAPI)"
+                                                 IsChecked="{Binding IsNewLectoSelected}"
+                                                 GroupName="NewProviderTypeGroup"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 FontSize="12" FontWeight="SemiBold"
+                                                 Margin="0,0,16,0" />
+                                    <RadioButton Content="Argos Translate (Offline)"
+                                                 IsChecked="{Binding IsNewArgosSelected}"
+                                                 GroupName="NewProviderTypeGroup"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Display Label -->
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Display Label:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                                <TextBox Text="{Binding NewProviderLabel, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="{StaticResource CardBackgroundBrush}"
+                                         Foreground="{StaticResource TextPrimaryBrush}"
+                                         BorderBrush="{StaticResource BorderBrush}"
+                                         Padding="10,8" FontSize="13" MaxWidth="480" HorizontalAlignment="Left" Width="480" />
+                            </StackPanel>
+
+                            <!-- Masked API Key (Visible if provider requires key) -->
+                            <StackPanel Margin="0,0,0,12" Visibility="{Binding IsNewProviderRequiresKey, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="API Key / Token:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                                <Grid HorizontalAlignment="Left" Width="480">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Masked PasswordBox -->
+                                    <PasswordBox Grid.Column="0"
+                                                 util:PasswordBoxHelper.BindPassword="True"
+                                                 util:PasswordBoxHelper.BoundPassword="{Binding NewProviderApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="{StaticResource CardBackgroundBrush}"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 BorderBrush="{StaticResource BorderBrush}"
+                                                 Padding="10,8" FontSize="13">
+                                        <PasswordBox.Style>
+                                            <Style TargetType="PasswordBox">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsNewKeyVisible}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </PasswordBox.Style>
+                                    </PasswordBox>
+
+                                    <!-- Visible TextBox -->
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding NewProviderApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="{StaticResource CardBackgroundBrush}"
+                                             Foreground="{StaticResource TextPrimaryBrush}"
+                                             BorderBrush="{StaticResource BorderBrush}"
+                                             Padding="10,8" FontSize="13">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsNewKeyVisible}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+
+                                    <!-- Show/Hide Toggle -->
+                                    <Button Grid.Column="1"
+                                            Command="{Binding ToggleNewKeyVisibilityCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"
+                                            Margin="8,0,0,0" Padding="12,8">
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Show" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsNewKeyVisible}" Value="True">
+                                                            <Setter Property="Text" Value="Hide" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="Protected using Windows DPAPI and stored securely."
+                                           Style="{StaticResource TextSubtitle}" FontSize="11" Margin="0,4,0,0" />
+                            </StackPanel>
+
+                            <!-- Soft Usage Limit -->
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Estimated Monthly Character Soft Limit (Optional):" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                                <TextBox Text="{Binding NewProviderSoftLimit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
+                                         Background="{StaticResource CardBackgroundBrush}"
+                                         Foreground="{StaticResource TextPrimaryBrush}"
+                                         BorderBrush="{StaticResource BorderBrush}"
+                                         Padding="10,8" FontSize="13" MaxWidth="240" HorizontalAlignment="Left" Width="240" />
+                                <TextBlock Text="Leave empty for unlimited. The app proactively moves to the next provider when estimated usage reaches this limit."
+                                           Style="{StaticResource TextSubtitle}" FontSize="11" Margin="0,4,0,0" />
+                            </StackPanel>
+
+                            <!-- Add Provider Status Message -->
+                            <TextBlock Text="{Binding AddProviderStatusMessage}"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       Margin="0,0,0,12"
+                                       Visibility="{Binding HasAddProviderStatusMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                            <!-- Buttons -->
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Test &amp; Save Provider"
+                                        Command="{Binding TestAndSaveNewProviderCommand}"
+                                        Style="{StaticResource PrimaryActionButtonStyle}"
+                                        Padding="16,8" Margin="0,0,10,0" />
+
+                                <Button Content="Cancel"
+                                        Command="{Binding CancelAddProviderCommand}"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Padding="14,8" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- SECTION: Offline Translation Engine (Argos Translate) -->
+            <StackPanel>
+                <!-- Engine Lifecycle Card -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                    <StackPanel>
+                        <DockPanel LastChildFill="False" Margin="0,0,0,12">
+                            <TextBlock Text="OFFLINE TRANSLATION ENGINE (ARGOS TRANSLATE)" Style="{StaticResource TextCardTitle}" DockPanel.Dock="Left" VerticalAlignment="Center" />
+
+                            <!-- Status Dot & Text -->
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <Ellipse VerticalAlignment="Center" Margin="0,0,8,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse" BasedOn="{StaticResource StatusDotStyle}">
+                                            <Setter Property="Fill" Value="{StaticResource TextMutedBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ArgosEngineState}" Value="{x:Static trans:ArgosProcessState.Running}">
+                                                    <Setter Property="Fill" Value="{StaticResource StatusConnectedBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ArgosEngineState}" Value="{x:Static trans:ArgosProcessState.Starting}">
+                                                    <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ArgosEngineState}" Value="{x:Static trans:ArgosProcessState.Failed}">
+                                                    <Setter Property="Fill" Value="{StaticResource StatusDisconnectedBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding ArgosEngineStatusMessage}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <TextBlock Text="Runs completely locally via bundled Python subprocess on loopback (127.0.0.1). Process lifecycle is secured with Windows Job Objects to eliminate orphaned processes."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="▶  Start Engine"
+                                    Command="{Binding StartArgosEngineCommand}"
+                                    Style="{StaticResource PrimaryActionButtonStyle}"
+                                    Padding="14,6" Margin="0,0,10,0" />
+
+                            <Button Content="⏹  Stop Engine"
+                                    Command="{Binding StopArgosEngineCommand}"
+                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Padding="14,6" Margin="0,0,10,0" />
+
+                            <Button Content="↻  Restart Engine"
+                                    Command="{Binding RestartArgosEngineCommand}"
+                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Padding="14,6" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Language Models Manager Card -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="OFFLINE LANGUAGE PACKAGES (.ARGOSMODEL)" Style="{StaticResource TextCardTitle}" Margin="0,0,0,12" />
+                        <TextBlock Text="Offline mode uses 0 cloud calls during gameplay. A one-time package download is required to install each language pair onto your computer (~45 MB – ~95 MB each)."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                        <TextBlock Text="ℹ Note on Language Pivoting: Argos models translate directly to/from English. Non-English translations (e.g. Hindi ↔ Chinese) automatically pivot through English (hi → en → zh) with slightly lower nuance."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <!-- Items List -->
+                        <ItemsControl ItemsSource="{Binding ArgosPackages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="14,10"
+                                            Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Language Name & Size -->
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding ApproxSize, StringFormat={}Download size: {0}}"
+                                                           FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                                            </StackPanel>
+
+                                            <!-- Status Label -->
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding StatusText}"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,16,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsInstalled}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource StatusConnectedBrush}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsDownloading}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <!-- Download / Action Button -->
+                                            <Button Grid.Column="2"
+                                                    Content="⬇  Download"
+                                                    Command="{Binding DownloadCommand}"
+                                                    Padding="12,5"
+                                                    FontSize="11">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsInstalled}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                                <Setter Property="Content" Value="✓ Installed" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsDownloading}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                                <Setter Property="Content" Value="Downloading..." />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Card 4: Audio Capture Hardware (Microphone) -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="AUDIO CAPTURE HARDWARE" Style="{StaticResource TextCardTitle}" />
+                    <TextBlock Text="Input Microphone Device" Style="{StaticResource TextHeader2}" Margin="0,0,0,16" />
+
+                    <StackPanel Margin="0,0,0,8">
+                        <TextBlock Text="Microphone:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                        <Grid HorizontalAlignment="Left" Width="480">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox Grid.Column="0"
+                                      ItemsSource="{Binding AvailableMicrophones}"
+                                      SelectedItem="{Binding SelectedMicrophone}"
+                                      DisplayMemberPath="Name"
+                                      Background="{StaticResource CardElevatedBackgroundBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Padding="10,8"
+                                      FontSize="13" />
+
+                            <Button Grid.Column="1"
+                                    Content="↻ Refresh"
+                                    Command="{Binding RefreshMicrophonesCommand}"
+                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Margin="8,0,0,0"
+                                    Padding="12,8" />
+                        </Grid>
+                        <TextBlock Text="Selected device is saved to application settings and used for live translation."
+                                   Style="{StaticResource TextSubtitle}" FontSize="11" Margin="0,6,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 5: Default Language Preferences -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="TRANSLATION DEFAULTS" Style="{StaticResource TextCardTitle}" />
+                    <TextBlock Text="Default Language Preferences" Style="{StaticResource TextHeader2}" Margin="0,0,0,16" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Text="Default Source Language:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                            <ComboBox ItemsSource="{Binding AvailableSourceLanguages}"
+                                      SelectedItem="{Binding SelectedSourceLanguage}"
+                                      DisplayMemberPath="DisplayName"
+                                      Width="220"
+                                      Background="{StaticResource CardElevatedBackgroundBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Padding="10,8"
+                                      FontSize="13" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Text="Default Target Language:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                            <ComboBox ItemsSource="{Binding AvailableTargetLanguages}"
+                                      SelectedItem="{Binding SelectedTargetLanguage}"
+                                      DisplayMemberPath="DisplayName"
+                                      Width="220"
+                                      Background="{StaticResource CardElevatedBackgroundBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Padding="10,8"
+                                      FontSize="13" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 6: Voice Output (Text-to-Speech) -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="VOICE OUTPUT (TEXT-TO-SPEECH)" Style="{StaticResource TextCardTitle}" Margin="0,0,0,12" />
+                    <TextBlock Text="Synthesize finalized translated messages into speech during gameplay. Defaults to OFF and requires explicit opt-in."
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                    <!-- Enable Toggle -->
+                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="16,12"
+                            Margin="0,0,0,18">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Enable Voice Output" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Text="Audio will play aloud for finalized translated speech callouts."
+                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0" />
+                            </StackPanel>
+
+                            <CheckBox DockPanel.Dock="Right"
+                                      IsChecked="{Binding IsVoiceOutputEnabled}"
+                                      VerticalAlignment="Center"
+                                      Content="{Binding IsVoiceOutputEnabled, Converter={StaticResource BooleanToStatusConverter}, ConverterParameter='ON|OFF'}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      FontSize="13" FontWeight="Bold" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Provider Selection -->
+                    <TextBlock Text="TTS PROVIDER" Style="{StaticResource TextSubtitle}" Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <RadioButton Content="Deepgram Aura (Online - EN / ES only)"
+                                     IsChecked="{Binding IsDeepgramTtsSelected}"
+                                     Command="{Binding SelectDeepgramTtsCommand}"
+                                     GroupName="TtsProviderGroup"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     FontSize="13" FontWeight="SemiBold"
+                                     Margin="0,0,24,0" />
+
+                        <RadioButton Content="Piper-plus (100% Offline Engine)"
+                                     IsChecked="{Binding IsPiperTtsSelected}"
+                                     Command="{Binding SelectPiperTtsCommand}"
+                                     GroupName="TtsProviderGroup"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     FontSize="13" FontWeight="SemiBold"
+                                     Margin="0,0,24,0" />
+
+                        <RadioButton Content="Edge TTS (Free, Online, Unofficial)"
+                                     IsChecked="{Binding IsEdgeTtsSelected}"
+                                     Command="{Binding SelectEdgeTtsCommand}"
+                                     GroupName="TtsProviderGroup"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     FontSize="13" FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <!-- Persistent Standing Warning Banner for Edge TTS -->
+                    <Border Background="#332B00"
+                            BorderBrush="#FFC107"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="14,10"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding IsEdgeTtsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="⚠ " FontWeight="Bold" Foreground="#FFD54F" FontSize="14"/>
+                                <TextBlock Text="Edge TTS uses an unofficial Microsoft service and may stop working without notice." 
+                                           FontWeight="SemiBold" Foreground="#FFF9C4" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Text="It requires an active internet connection (unlike Piper's offline voices)." 
+                                       Foreground="#FFE082" Margin="18,0,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Language Compatibility / Warning Banner -->
+                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="14,10"
+                            Margin="0,0,0,16">
+                        <DockPanel LastChildFill="True">
+                            <Button DockPanel.Dock="Right"
+                                    Content="Switch to Piper (Offline)"
+                                    Command="{Binding SwitchToPiperCommand}"
+                                    Style="{StaticResource PrimaryActionButtonStyle}"
+                                    Padding="10,4" FontSize="11"
+                                    Visibility="{Binding CanSwitchToPiper, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" Margin="12,0,0,0" />
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="ℹ " Foreground="{StaticResource AccentBrush}" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="{Binding TtsLanguageStatusMessage}"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           FontSize="12" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Voice Selection Dropdown & Test Voice -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <TextBlock Text="Voice:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                            <ComboBox ItemsSource="{Binding AvailableVoices}"
+                                      SelectedItem="{Binding SelectedVoice}"
+                                      DisplayMemberPath="DisplayName"
+                                      Background="{StaticResource CardElevatedBackgroundBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Padding="10,8"
+                                      FontSize="13" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Bottom">
+                            <Button Content="▶  Test Voice"
+                                    Command="{Binding TestVoiceCommand}"
+                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Padding="14,9" FontSize="12" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Sliders for Volume and Speed -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Volume Slider -->
+                        <StackPanel Grid.Column="0">
+                            <DockPanel LastChildFill="False" Margin="0,0,0,6">
+                                <TextBlock Text="Output Volume:" Style="{StaticResource TextSubtitle}" DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding TtsVolume, StringFormat={}{0:F0}%}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           FontWeight="SemiBold"
+                                           FontSize="12"
+                                           DockPanel.Dock="Right" />
+                            </DockPanel>
+                            <Slider Minimum="0" Maximum="200"
+                                    Value="{Binding TtsVolume, Mode=TwoWay}"
+                                    TickFrequency="10" IsSnapToTickEnabled="False" />
+                        </StackPanel>
+
+                        <!-- Speed Slider -->
+                        <StackPanel Grid.Column="2">
+                            <DockPanel LastChildFill="False" Margin="0,0,0,6">
+                                <TextBlock Text="Speech Speed:" Style="{StaticResource TextSubtitle}" DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding TtsSpeed, StringFormat={}{0:F1}x}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           FontWeight="SemiBold"
+                                           FontSize="12"
+                                           DockPanel.Dock="Right" />
+                            </DockPanel>
+                            <Slider Minimum="0.5" Maximum="2.0"
+                                    Value="{Binding TtsSpeed, Mode=TwoWay}"
+                                    TickFrequency="0.1" IsSnapToTickEnabled="True" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Piper Offline Models Manager (Visible when Piper selected) -->
+                    <StackPanel Visibility="{Binding IsPiperTtsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,4,0,16" />
+
+                        <DockPanel LastChildFill="False" Margin="0,0,0,10">
+                            <TextBlock Text="OFFLINE PIPER VOICE PACKAGES (.ONNX)" Style="{StaticResource TextCardTitle}" DockPanel.Dock="Left" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding PiperEngineStatusMessage}"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       DockPanel.Dock="Right" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <TextBlock Text="Download voice models to your local machine for zero-cloud, 100% offline speech synthesis. Extends support to Mandarin Chinese."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,14" />
+
+                        <ItemsControl ItemsSource="{Binding PiperPackages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="14,10"
+                                            Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding ApproxSize, StringFormat={}Size: {0}}"
+                                                           FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding License, StringFormat={}License: {0}}"
+                                                           FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,1,0,0" />
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding StatusText}"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,16,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsInstalled}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource StatusConnectedBrush}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsDownloading}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <Button Grid.Column="2"
+                                                    Content="⬇  Download"
+                                                    Command="{Binding DownloadCommand}"
+                                                    Padding="12,5"
+                                                    FontSize="11">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsInstalled}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                                <Setter Property="Content" Value="✓ Installed" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsDownloading}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                                <Setter Property="Content" Value="Downloading..." />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Tsukuyomi-chan Corpus License Attribution -->
+                        <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="12,10"
+                                Margin="0,4,0,0">
+                            <StackPanel>
+                                <TextBlock Text="VOICE CREDITS &amp; ATTRIBUTION"
+                                           FontSize="10"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Text="Tsukuyomi-chan voice model is trained on the Tsukuyomi-chan Corpus (声・企画：夢前黎 / CV: Rei Yumesaki). Permitted for personal, gaming, and commercial streaming use under the Tsukuyomi-chan Corpus Terms (https://tyc.rei-yumesaki.net/)."
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 6b: Voice Output Routing (Discord / In-Game Voice Chat) -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <DockPanel LastChildFill="False" Margin="0,0,0,12">
+                        <TextBlock Text="VOICE OUTPUT ROUTING (DISCORD / VOICE CHAT)" Style="{StaticResource TextCardTitle}" DockPanel.Dock="Left" VerticalAlignment="Center" />
+                        <Border Background="{StaticResource CardElevatedBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" DockPanel.Dock="Right">
+                            <TextBlock Text="{Binding VirtualDeviceStatusText}" FontSize="11" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsVirtualDeviceDetected}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource StatusConnectedBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                    </DockPanel>
+
+                    <TextBlock Text="Route translated speech directly to teammates in Discord or your game's voice chat using a virtual audio cable, in addition to or instead of your local speakers."
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                    <!-- Destination Toggles -->
+                    <StackPanel Margin="0,0,0,16">
+                        <CheckBox IsChecked="{Binding PlayTtsThroughSpeakers}" Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Play through my speakers / headphones" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Text=" (so you can hear yourself)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="4,1,0,0" />
+                            </StackPanel>
+                        </CheckBox>
+
+                        <CheckBox IsChecked="{Binding RouteTtsToVirtualDevice}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Route to virtual audio device" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Text=" (sends translated voice to Discord teammates)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="4,1,0,0" />
+                            </StackPanel>
+                        </CheckBox>
+                    </StackPanel>
+
+                    <!-- Device Selector & Action Buttons -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="Virtual Device Target:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                            <ComboBox ItemsSource="{Binding AvailableVirtualDevices}"
+                                      SelectedItem="{Binding SelectedVirtualDevice}"
+                                      DisplayMemberPath="Name"
+                                      Background="{StaticResource CardElevatedBackgroundBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Padding="10,8" FontSize="13" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Content="🔍  Detect Virtual Device"
+                                Command="{Binding DetectVirtualDeviceCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Padding="14,8" FontSize="12"
+                                VerticalAlignment="Bottom"
+                                Margin="0,0,8,0" />
+
+                        <Button Grid.Column="2"
+                                Content="ℹ  How to set this up"
+                                Command="{Binding ToggleSetupGuideCommand}"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Padding="14,8" FontSize="12"
+                                VerticalAlignment="Bottom" />
+                    </Grid>
+
+                    <!-- Acoustic Feedback Loop Warning Banner -->
+                    <Border Background="#1A3B82F6" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🎧 " FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Acoustic Feedback Protection: Microphone input is automatically suppressed while translated speech plays aloud. For best gaming results, we recommend using a headset so desktop speakers do not echo into voice chat."
+                                       FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step-by-Step Setup Guide (Collapsible) -->
+                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="16"
+                            Visibility="{Binding IsSetupGuideVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <DockPanel LastChildFill="False" Margin="0,0,0,12">
+                                <TextBlock Text="STEP-BY-STEP SETUP GUIDE: DISCORD / IN-GAME VOICE CHAT"
+                                           FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                                           DockPanel.Dock="Left" VerticalAlignment="Center" />
+                                <Button DockPanel.Dock="Right"
+                                        Content="✕ Close Guide"
+                                        Command="{Binding ToggleSetupGuideCommand}"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Padding="8,4" FontSize="10" />
+                            </DockPanel>
+
+                            <TextBlock Text="To send your translated voice to teammates in Discord or game voice channels, Windows requires a virtual audio bridge (VB-CABLE). Setup takes 2 minutes:"
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                            <Border Background="{StaticResource CardBackgroundBrush}" CornerRadius="4" Padding="12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="Step 1: Download &amp; Install VB-CABLE" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="• Download the official driver package from VB-Audio (VBCABLE_Driver_Pack43.zip)." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2" />
+                                    <TextBlock Text="• Extract the zip to a local folder. Right-click 'VBCABLE_Setup_x64.exe' and select 'Run as administrator'." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2" />
+                                    <TextBlock Text="• Click 'Install Driver', then restart your computer (mandatory for Windows Audio to bind the device)." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8" />
+                                    <Button Content="🌐 Open Official VB-CABLE Download Page (vb-audio.com)"
+                                            Command="{Binding OpenVbCableDownloadCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"
+                                            HorizontalAlignment="Left"
+                                            Padding="10,5" FontSize="11" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{StaticResource CardBackgroundBrush}" CornerRadius="4" Padding="12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="Step 2: Configure Gaming Live Translator" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="• Click 'Detect Virtual Device' above. The app will automatically select 'CABLE Input (VB-Audio Virtual Cable)'." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2" />
+                                    <TextBlock Text="• Ensure 'Route to virtual audio device' is checked." FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{StaticResource CardBackgroundBrush}" CornerRadius="4" Padding="12">
+                                <StackPanel>
+                                    <TextBlock Text="Step 3: Set Microphone Input in Discord or Game" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="• Open Discord → User Settings (⚙) → Voice &amp; Video." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2" />
+                                    <TextBlock Text="• Under 'Input Device', select: CABLE Output (VB-Audio Virtual Cable)." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2" />
+                                    <TextBlock Text="• Click 'Let's Check' to test: when the translator speaks, Discord will receive the translated voice as your microphone!" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 7: Global Push-to-Talk Hotkey & In-Game Input Handling -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <DockPanel LastChildFill="False" Margin="0,0,0,12">
+                        <TextBlock Text="GLOBAL PUSH-TO-TALK &amp; IN-GAME HOTKEY" Style="{StaticResource TextCardTitle}" DockPanel.Dock="Left" VerticalAlignment="Center" />
+                        <Border Background="#1A10B981" BorderBrush="#10B981" BorderThickness="1" CornerRadius="4" Padding="8,2" DockPanel.Dock="Right">
+                            <TextBlock Text="🛡️ Anti-Cheat Safe (Polling)" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" />
+                        </Border>
+                    </DockPanel>
+
+                    <TextBlock Text="Control speech capture while playing full-screen DirectX/Vulkan games without alt-tabbing. Operates via safe background Win32 GetAsyncKeyState polling (no low-level system keyboard hooks) to protect against anti-cheat bans."
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                    <!-- Keybind Selector & Recorder -->
+                    <TextBlock Text="Assigned Hotkey:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,6" />
+                    <Grid HorizontalAlignment="Left" Width="480" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Key Display Box -->
+                        <Border Grid.Column="0"
+                                Background="{StaticResource CardElevatedBackgroundBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="12,8">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Key: " FontSize="13" Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding HotkeyDisplayName}"
+                                           FontSize="13"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Record / Cancel Button -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                            <Button Content="⌨  Change Hotkey"
+                                    Command="{Binding RecordHotkeyCommand}"
+                                    Padding="14,8">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRecordingHotkey}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="✕  Cancel"
+                                    Command="{Binding CancelRecordHotkeyCommand}"
+                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Padding="14,8"
+                                    Visibility="{Binding IsRecordingHotkey, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Recording In-Progress Banner -->
+                    <Border Background="#203B82F6"
+                            BorderBrush="{StaticResource AccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,10"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding IsRecordingHotkey, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🔴 " FontSize="13" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding HotkeyStatusMessage}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Mode Selector -->
+                    <TextBlock Text="Activation Mode:" Style="{StaticResource TextSubtitle}" Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <RadioButton Content="Push-to-Talk (Hold key to speak, release to finalize)"
+                                     IsChecked="{Binding IsPushToTalkMode}"
+                                     GroupName="HotkeyModeGroup"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     FontSize="13" FontWeight="SemiBold"
+                                     Margin="0,0,24,0" />
+
+                        <RadioButton Content="Toggle (Press once to start, press again to stop)"
+                                     IsChecked="{Binding IsToggleMode}"
+                                     GroupName="HotkeyModeGroup"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     FontSize="13" FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <!-- Supported Alternate Inputs Notice -->
+                    <TextBlock Text="Supports standard keyboard keys (F1-F12, Caps Lock, Space, Tilde, Alt, etc.) and gaming mouse thumb buttons (Mouse 4 &amp; 5)."
+                               FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

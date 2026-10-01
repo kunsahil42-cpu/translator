@@ -1,0 +1,157 @@
+<!--
+    NOTE ON PERFORMANCE TRADEOFF:
+    WPF's 'AllowsTransparency="True"' forces the window into the software composition pipeline
+    rather than direct hardware-accelerated presentation. For this in-game HUD overlay, this is
+    an intentional, acceptable tradeoff: the window footprint is moderate, redrawing occurs
+    only when a new speech utterance arrives (infrequent), and card backgrounds use simple solid
+    semi-transparent brushes without expensive GPU-intensive backdrop blur shaders. As a result,
+    CPU usage is near 0% and does not compete with GPU rendering for active games.
+-->
+<Window x:Class="GamingLiveTranslator.Views.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:GamingLiveTranslator.ViewModels"
+        mc:Ignorable="d"
+        Title="Gaming Live Overlay"
+        Height="280" Width="640"
+        MinHeight="140" MinWidth="360"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        d:DataContext="{d:DesignInstance Type=vm:OverlayViewModel}">
+
+    <Grid Margin="12">
+        <!-- Main Overlay Container Card -->
+        <Border Background="#D00B0E14"
+                Opacity="{Binding Opacity}"
+                BorderBrush="{StaticResource AccentBrush}"
+                BorderThickness="1.5"
+                CornerRadius="10"
+                Padding="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Drag Bar (Visible only when not click-through) -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Subtitle Message Stream -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Draggable HUD Header Bar -->
+                <Grid x:Name="DragBar" Grid.Row="0" Margin="0,0,0,8" Cursor="SizeAll" Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="❖ HUD OVERLAY"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="[Drag to reposition]"
+                                   FontSize="10"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+                        <!-- Live PTT Recording Badge -->
+                        <Border Background="#33EF4444" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="10,0,0,0"
+                                Visibility="{Binding IsListening, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="6" Height="6" Fill="#EF4444" Margin="0,0,4,0" />
+                                <TextBlock Text="REC (PTT)" FontSize="9" FontWeight="Bold" Foreground="#EF4444" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            Content="✕"
+                            Command="{Binding ToggleOverlayCommand}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{StaticResource TextMutedBrush}"
+                            FontSize="11"
+                            Padding="6,2"
+                            ToolTip="Hide Overlay (Can re-enable in Settings)" />
+                </Grid>
+
+                <!-- Live Translation Message Cards -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding VisibleMessages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#E8161B22"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10,8"
+                                        Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <!-- Header: Speaker & Language badge (Real metadata, no fabricated names) -->
+                                        <DockPanel LastChildFill="False" Margin="0,0,0,4">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                                <TextBlock Text="🌐 " FontSize="11" />
+                                                <TextBlock Text="{Binding Speaker}"
+                                                           FontSize="11"
+                                                           FontWeight="Bold"
+                                                           Foreground="{StaticResource AccentBrush}" />
+                                                <TextBlock Text="{Binding SourceLanguage, StringFormat= ({0})}"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource TextMutedBrush}" />
+                                            </StackPanel>
+
+                                            <TextBlock DockPanel.Dock="Right"
+                                                       Text="{Binding Timestamp, StringFormat={}{0:HH:mm:ss}}"
+                                                       FontSize="10"
+                                                       FontFamily="Consolas, monospace"
+                                                       Foreground="{StaticResource TextMutedBrush}" />
+                                        </DockPanel>
+
+                                        <!-- Translated Text (Primary & Prominent) -->
+                                        <TextBlock Text="{Binding TranslatedText}"
+                                                   FontSize="{Binding DataContext.FontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTranslating}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                                            <Setter Property="FontStyle" Value="Italic" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsTranslationFailed}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource StatusDisconnectedBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- Original Spoken Text (Secondary & Subtle) -->
+                                        <TextBlock Text="{Binding OriginalText}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Resize Grip (Visible in bottom right when not click-through) -->
+                <ResizeGrip x:Name="WindowResizeGrip"
+                            Grid.Row="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Cursor="SizeNWSE"
+                            Margin="0,0,-4,-4" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

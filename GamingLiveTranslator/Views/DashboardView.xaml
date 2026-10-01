@@ -1,0 +1,146 @@
+<UserControl x:Class="GamingLiveTranslator.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:GamingLiveTranslator.ViewModels"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:DashboardViewModel}"
+             d:DesignHeight="650" d:DesignWidth="850">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
+        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch">
+            
+            <!-- Page Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="System Dashboard" Style="{StaticResource TextHeader1}" />
+                <TextBlock Text="Real-time translation engine health, audio pipeline status, and provider configuration."
+                           Style="{StaticResource TextSubtitle}" Margin="0,6,0,0" />
+            </StackPanel>
+
+            <!-- Metrics Cards Grid -->
+            <UniformGrid Columns="2" Margin="0,0,0,24">
+
+                <!-- Card 1: Service Status -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,14">
+                    <StackPanel>
+                        <TextBlock Text="SERVICE STATUS" Style="{StaticResource TextCardTitle}" />
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Style="{StaticResource StatusDotStyle}" Fill="{StaticResource StatusConnectedBrush}" />
+                            <TextBlock Text="{Binding ServiceStatus}" Style="{StaticResource TextCardValue}" />
+                        </StackPanel>
+                        <TextBlock Text="All core background systems operational" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: Microphone Status -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="10,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="AUDIO CAPTURE" Style="{StaticResource TextCardTitle}" />
+                        <TextBlock Text="{Binding MicrophoneStatus}" Style="{StaticResource TextCardValue}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="Input level nominal (WASAPI capture)" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 3: Speech Recognition -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,14">
+                    <StackPanel>
+                        <TextBlock Text="SPEECH RECOGNITION (STT)" Style="{StaticResource TextCardTitle}" />
+                        <TextBlock Text="{Binding SttProviderName}" Style="{StaticResource TextCardValue}" Foreground="{StaticResource AccentBrush}" />
+                        <TextBlock Text="WebSocket real-time audio stream" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 4: Translation Direction -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="10,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="TRANSLATION DIRECTION" Style="{StaticResource TextCardTitle}" />
+                        <TextBlock Text="{Binding TranslationDirection}" Style="{StaticResource TextCardValue}" Foreground="{StaticResource PrimaryBrandBrush}" />
+                        <TextBlock Text="{Binding TranslationProviderName, StringFormat='Using: {0}'}" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                        <Border Background="#2A2415"
+                                BorderBrush="{StaticResource StatusWarningBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="8,4"
+                                Margin="0,6,0,0"
+                                Visibility="{Binding HasFallbackNotice, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="{Binding FallbackNotice}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource StatusWarningBrush}" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 5: Voice Output (TTS) & Virtual Routing -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,14">
+                    <StackPanel>
+                        <TextBlock Text="VOICE OUTPUT &amp; ROUTING" Style="{StaticResource TextCardTitle}" />
+                        <DockPanel LastChildFill="False">
+                            <TextBlock Text="{Binding VoiceRoutingSummary}" Style="{StaticResource TextCardValue}" DockPanel.Dock="Left" VerticalAlignment="Center" />
+                            <CheckBox IsChecked="{Binding IsVoiceOutputEnabled}" Style="{StaticResource ToggleSwitchStyle}" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <TextBlock Text="Synthesize speech to Discord/game voice chat or headphones" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 6: Latency -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="10,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="ESTIMATED PIPELINE LATENCY" Style="{StaticResource TextCardTitle}" />
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Latency}" Style="{StaticResource TextCardValue}" Foreground="{StaticResource StatusConnectedBrush}" />
+                            <Border Background="{StaticResource StatusConnectedGlowBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                <TextBlock Text="OPTIMAL" FontSize="10" FontWeight="Bold" Foreground="{StaticResource StatusConnectedBrush}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="End-to-end voice capture to text output" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 7: In-Game Push-to-Talk Hotkey -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,10,14">
+                    <StackPanel>
+                        <TextBlock Text="IN-GAME PUSH-TO-TALK" Style="{StaticResource TextCardTitle}" />
+                        <TextBlock Text="{Binding HotkeySummary}" Style="{StaticResource TextCardValue}" Foreground="{StaticResource AccentBrush}" />
+                        <TextBlock Text="Global hotkey active in-game without alt-tab" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 8: Anti-Cheat Protection -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="10,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="ANTI-CHEAT COMPLIANCE" Style="{StaticResource TextCardTitle}" />
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Verified Safe" Style="{StaticResource TextCardValue}" Foreground="{StaticResource StatusConnectedBrush}" />
+                            <Border Background="{StaticResource StatusConnectedGlowBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                <TextBlock Text="NO HOOKS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource StatusConnectedBrush}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Pure GetAsyncKeyState polling — safe for EAC &amp; BattlEye" Style="{StaticResource TextSubtitle}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+            </UniformGrid>
+
+            <!-- Quick Action / Launch Panel -->
+            <Border Style="{StaticResource CardElevatedBorderStyle}" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1.5">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="Ready to Translate" Style="{StaticResource TextHeader2}" />
+                        <TextBlock Text="Launch the live translator session to begin monitoring voice channels."
+                                   Style="{StaticResource TextSubtitle}" Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            Content="Start Translator  ➔"
+                            Command="{Binding StartTranslatorCommand}"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
