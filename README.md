@@ -553,8 +553,4 @@ Thank you for checking out **Gaming Live Translator**! 🎮🌐
 
 ![Gaming Live Translator STT](docs/screenshots/stt.png)
 
-### 🔧 Additional Configuration
-
-![Gaming Live Translator Configuration](docs/screenshots/supoflan.png)
-
 ---
