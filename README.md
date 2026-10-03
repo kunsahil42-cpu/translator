@@ -516,3 +516,25 @@ If you find Gaming Live Translator useful or interesting, consider giving
 the repository a ⭐ star.
 
 Thank you for checking out **Gaming Live Translator**! 🎮🌐
+
+---
+
+## 📸 Screenshots
+
+### 📊 Dashboard
+
+![Gaming Live Translator Dashboard](docs/screenshots/dashboard.png)
+
+### 🎙️ Translator
+
+![Gaming Live Translator Translator](docs/screenshots/translator.png)
+
+### 🪟 Translation Overlay
+
+![Gaming Live Translator Overlay](docs/screenshots/overlay.png)
+
+### ⚙️ Settings
+
+![Gaming Live Translator Settings](docs/screenshots/settings.png)
+
+---
