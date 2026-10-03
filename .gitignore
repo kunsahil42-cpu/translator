@@ -34,3 +34,10 @@ stdout.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Visual Studio
+.vs/
+UpgradeLog.htm
+
+# Local backup
+Backup/
