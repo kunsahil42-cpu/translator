@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj": {}
+    "d:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj": {}
   },
   "projects": {
-    "D:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj": {
-      "version": "1.0.0",
+    "d:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj": {
+      "version": "2.0.0",
       "restore": {
-        "projectUniqueName": "D:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj",
-        "projectName": "GamingLiveTranslator",
-        "projectPath": "D:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj",
+        "projectUniqueName": "d:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj",
+        "projectName": "Ttranslator",
+        "projectPath": "d:\\pubgpc ch\\GamingLiveTranslator\\GamingLiveTranslator.csproj",
         "packagesPath": "C:\\Users\\sahil\\.nuget\\packages\\",
-        "outputPath": "D:\\pubgpc ch\\GamingLiveTranslator\\obj\\",
+        "outputPath": "d:\\pubgpc ch\\GamingLiveTranslator\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "D:\\pubgpc ch\\NuGet.Config",
+          "d:\\pubgpc ch\\NuGet.Config",
           "C:\\Users\\sahil\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
@@ -48,6 +48,12 @@
           "framework": "net10.0-windows7.0",
           "targetAlias": "net10.0-windows",
           "dependencies": {
+            "Microsoft.NET.ILLink.Tasks": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.11, )",
+              "autoReferenced": true
+            },
             "NAudio": {
               "target": "Package",
               "version": "[2.2.1, )"
@@ -64,6 +70,20 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[10.0.11, 10.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[10.0.11, 10.0.11]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+              "version": "[10.0.11, 10.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
@@ -363,6 +383,11 @@
             "System.Xml.XPath": "(,4.3.32767]",
             "System.Xml.XPath.XDocument": "(,5.0.32767]"
           }
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }

@@ -124,7 +124,7 @@ public class ArgosProcessManager : IDisposable
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = Path.GetDirectoryName(scriptPath) ?? AppDomain.CurrentDomain.BaseDirectory
+                WorkingDirectory = Path.GetDirectoryName(scriptPath) ?? AppContext.BaseDirectory
             };
             startInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
             startInfo.EnvironmentVariables["ARGOS_CHUNK_TYPE"] = "MINISBD";
@@ -272,7 +272,7 @@ public class ArgosProcessManager : IDisposable
 
     private async Task<bool> PollHealthAsync(CancellationToken cancellationToken)
     {
-        var timeout = TimeSpan.FromSeconds(15);
+        var timeout = TimeSpan.FromSeconds(30);
         var stopwatch = Stopwatch.StartNew();
 
         while (stopwatch.Elapsed < timeout && !cancellationToken.IsCancellationRequested)
@@ -312,18 +312,27 @@ public class ArgosProcessManager : IDisposable
 
     private static string ResolvePythonPath()
     {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var baseDir = AppContext.BaseDirectory;
 
-        // 1. Check bundled application PythonRuntime folder
-        var bundled = Path.Combine(baseDir, "PythonRuntime", "python.exe");
-        if (File.Exists(bundled))
-            return bundled;
+        // 1. Check companion Resources/PythonRuntime folder (prefer venv Scripts\python.exe)
+        var resPythonScripts = Path.Combine(baseDir, "Resources", "PythonRuntime", "Scripts", "python.exe");
+        if (File.Exists(resPythonScripts))
+            return resPythonScripts;
 
+        var resPython = Path.Combine(baseDir, "Resources", "PythonRuntime", "python.exe");
+        if (File.Exists(resPython))
+            return resPython;
+
+        // 2. Check companion PythonRuntime folder (prefer venv Scripts\python.exe)
         var bundledScripts = Path.Combine(baseDir, "PythonRuntime", "Scripts", "python.exe");
         if (File.Exists(bundledScripts))
             return bundledScripts;
 
-        // 2. Check local workspace virtual environment (test_env)
+        var bundled = Path.Combine(baseDir, "PythonRuntime", "python.exe");
+        if (File.Exists(bundled))
+            return bundled;
+
+        // 3. Check local workspace virtual environment (test_env)
         var testEnv = Path.Combine(baseDir, "test_env", "Scripts", "python.exe");
         if (File.Exists(testEnv))
             return testEnv;
@@ -332,12 +341,25 @@ public class ArgosProcessManager : IDisposable
         if (File.Exists(parentTestEnv))
             return Path.GetFullPath(parentTestEnv);
 
+        var publishParentTestEnv = Path.Combine(baseDir, "..", "..", "..", "..", "test_env", "Scripts", "python.exe");
+        if (File.Exists(publishParentTestEnv))
+            return Path.GetFullPath(publishParentTestEnv);
+
+        // 4. Fallback: Check known workspace / publish paths on developer machine
+        var devPublishEnv = @"D:\pubgpc ch\GamingLiveTranslator\bin\Release\net10.0-windows\win-x64\publish\Resources\PythonRuntime\Scripts\python.exe";
+        if (File.Exists(devPublishEnv))
+            return devPublishEnv;
+
+        var devTestEnv = @"D:\pubgpc ch\GamingLiveTranslator\test_env\Scripts\python.exe";
+        if (File.Exists(devTestEnv))
+            return devTestEnv;
+
         return string.Empty;
     }
 
     private static string ResolveScriptPath()
     {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var baseDir = AppContext.BaseDirectory;
 
         var script1 = Path.Combine(baseDir, "Resources", "PythonRuntime", "translate_server.py");
         if (File.Exists(script1))
@@ -346,6 +368,23 @@ public class ArgosProcessManager : IDisposable
         var script2 = Path.Combine(baseDir, "..", "..", "..", "Resources", "PythonRuntime", "translate_server.py");
         if (File.Exists(script2))
             return Path.GetFullPath(script2);
+
+        var script3 = Path.Combine(baseDir, "..", "..", "..", "..", "Resources", "PythonRuntime", "translate_server.py");
+        if (File.Exists(script3))
+            return Path.GetFullPath(script3);
+
+        var script4 = Path.Combine(baseDir, "translate_server.py");
+        if (File.Exists(script4))
+            return script4;
+
+        // Fallback: Check known workspace paths
+        var devPublishScript = @"D:\pubgpc ch\GamingLiveTranslator\bin\Release\net10.0-windows\win-x64\publish\Resources\PythonRuntime\translate_server.py";
+        if (File.Exists(devPublishScript))
+            return devPublishScript;
+
+        var devScript = @"D:\pubgpc ch\GamingLiveTranslator\Resources\PythonRuntime\translate_server.py";
+        if (File.Exists(devScript))
+            return devScript;
 
         return string.Empty;
     }

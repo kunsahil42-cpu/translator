@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -25,7 +25,7 @@ public class EdgeTtsService : ITextToSpeechService
     // Real, verified neural voice catalog for supported target languages
     private static readonly HashSet<string> _supportedLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
-        "hi", "zh", "ja", "ko", "en", "es", "fr", "de", "pt", "ru", "ar"
+        "hi", "zh", "ja", "ko", "en", "es", "fr", "de", "pt", "ru", "ar", "th"
     };
 
     public EdgeTtsService(PiperProcessManager processManager)
@@ -89,9 +89,17 @@ public class EdgeTtsService : ITextToSpeechService
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync(cancellationToken);
-                var is503 = response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable;
-                var errorMsg = is503
-                    ? "Edge TTS (unofficial) is currently unavailable. Microsoft's endpoint may be unreachable, rate-limited, or blocked. Please switch to Piper (offline) or Deepgram."
+                string detailMsg = string.Empty;
+                try
+                {
+                    using var doc = JsonDocument.Parse(body);
+                    if (doc.RootElement.TryGetProperty("error", out var errProp))
+                        detailMsg = errProp.GetString() ?? string.Empty;
+                }
+                catch { }
+
+                var errorMsg = !string.IsNullOrWhiteSpace(detailMsg)
+                    ? $"Edge TTS error: {detailMsg}"
                     : $"Edge TTS synthesis failed (HTTP {(int)response.StatusCode}): {body}";
 
                 Logger.Error($"Edge TTS synthesis failure: {errorMsg}");
@@ -128,17 +136,7 @@ public class EdgeTtsService : ITextToSpeechService
     /// Uses Windows Media Foundation via NAudio, guaranteeing full compatibility
     /// with the downstream peak normalization, presence EQ, and WASAPI dual-output pipeline.
     /// </summary>
-    public static byte[] DecodeMp3ToWavPcm(byte[] mp3Bytes)
-    {
-        using var mp3Stream = new MemoryStream(mp3Bytes);
-        using var reader = new StreamMediaFoundationReader(mp3Stream);
-        using var wavStream = new MemoryStream();
-        using (var writer = new WaveFileWriter(wavStream, reader.WaveFormat))
-        {
-            reader.CopyTo(writer);
-        }
-        return wavStream.ToArray();
-    }
+    public static byte[] DecodeMp3ToWavPcm(byte[] mp3Bytes) => AudioDecodingHelper.DecodeMp3ToWavPcm(mp3Bytes);
 
     public static string ResolveVoice(string? requestedVoice, string languageCode)
     {
@@ -159,6 +157,7 @@ public class EdgeTtsService : ITextToSpeechService
             "pt" => "pt-BR-FranciscaNeural",
             "ru" => "ru-RU-SvetlanaNeural",
             "ar" => "ar-SA-ZariyahNeural",
+            "th" => "th-TH-PremwadeeNeural",
             _ => "en-US-JennyNeural"
         };
     }

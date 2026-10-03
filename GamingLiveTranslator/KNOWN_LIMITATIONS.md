@@ -1,4 +1,4 @@
-﻿# Gaming Live Translator — Known Limitations & Architectural Decisions
+# Gaming Live Translator — Known Limitations & Architectural Decisions
 
 This document consolidates key architectural decisions, licensing obligations, third-party service constraints, and intentional scope deferrals for the **Gaming Live Translator** project. It serves as a persistent technical reference for maintainers and developers.
 
@@ -74,8 +74,14 @@ This document consolidates key architectural decisions, licensing obligations, t
 ## 4. Security & Privacy Architecture
 
 ### Credential Protection (Windows DPAPI)
-- All third-party API keys (Deepgram, Google Cloud Translate, RapidAPI Lecto) are encrypted using the **Windows Data Protection API (`ProtectedData.Protect`)** scoped to the current Windows user (`DataProtectionScope.CurrentUser`).
+- All third-party API keys (Deepgram, Google Cloud Translate, RapidAPI Lecto, ElevenLabs) are encrypted using the **Windows Data Protection API (`ProtectedData.Protect`)** scoped to the current Windows user (`DataProtectionScope.CurrentUser`).
 - Credentials are encrypted on disk at `%LOCALAPPDATA%\GamingLiveTranslator\secrets.dat`. They are never written to plain JSON settings files, never printed to console logs, and never transmitted to any telemetry endpoint.
+
+### Credential Storage Location & Distribution Safety
+- API keys are stored per-Windows-account in `%LOCALAPPDATA%\GamingLiveTranslator\secrets.dat`, encrypted via Windows DPAPI (`DataProtectionScope.CurrentUser`).
+- This location is entirely separate from the application's install/publish folder and is never included when building or distributing the app.
+- A developer's own machine will show previously-saved keys when testing a freshly published build — this reflects existing per-user OS storage, not keys bundled with the app.
+- DPAPI encryption is tied to the specific Windows user account and machine; even if `secrets.dat` were copied elsewhere, it cannot be decrypted by a different user account.
 
 ### Anti-Cheat Compliant Push-to-Talk
 - `GlobalHotkeyService` intentionally avoids installing Windows global keyboard hooks (`WH_KEYBOARD_LL` / `SetWindowsHookEx`). Low-level hooks are frequently flagged or blocked by kernel-level anti-cheat systems (Easy Anti-Cheat, BattlEye, Riot Vanguard).

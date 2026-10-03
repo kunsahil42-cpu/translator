@@ -54,7 +54,7 @@ namespace GamingLiveTranslator.Views.Controls {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/GamingLiveTranslator;component/views/controls/providerapikeycard.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Ttranslator;V2.0.0;component/views/controls/providerapikeycard.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\Views\Controls\ProviderApiKeyCard.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

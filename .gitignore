@@ -18,12 +18,18 @@ GamingLiveTranslator/test_env/
 
 # Local .NET data
 .dotnet_cli/
+.dotnet/
 .appdata/
 
 # Logs
 *.log
 stderr.txt
 stdout.txt
+
+# Archives and releases
+*.zip
+*.7z
+*.tar.gz
 
 # OS
 .DS_Store

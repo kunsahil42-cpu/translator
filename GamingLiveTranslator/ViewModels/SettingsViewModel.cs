@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
 using System.Windows.Input;
@@ -9,6 +9,7 @@ using GamingLiveTranslator.Services.Hotkeys;
 using GamingLiveTranslator.Services.Speech;
 using GamingLiveTranslator.Services.TextToSpeech;
 using GamingLiveTranslator.Services.Translation;
+using GamingLiveTranslator.Services.Updates;
 using GamingLiveTranslator.Utilities;
 
 namespace GamingLiveTranslator.ViewModels;
@@ -28,8 +29,11 @@ public class SettingsViewModel : ViewModelBase
     private readonly DeepgramTtsService _deepgramTtsService;
     private readonly PiperTtsService _piperTtsService;
     private readonly EdgeTtsService _edgeTtsService;
+    private readonly ElevenLabsTtsService _elevenLabsTtsService;
+    private readonly IElevenLabsValidator _elevenLabsValidator;
     private readonly TtsPlaybackService _ttsPlaybackService;
     private readonly IVirtualAudioRoutingService _virtualAudioRoutingService;
+    private readonly IUpdateCheckService _updateCheckService;
 
     public ObservableCollection<TranslationProviderItemViewModel> TranslationProviders { get; } = new();
 
@@ -231,6 +235,7 @@ public class SettingsViewModel : ViewModelBase
 
     public ProviderCredentialViewModel DeepgramCredentialVM { get; }
     public ProviderCredentialViewModel GoogleCredentialVM { get; }
+    public ProviderCredentialViewModel ElevenLabsCredentialVM { get; }
 
     public ObservableCollection<AudioDevice> AvailableMicrophones { get; } = new();
     public ObservableCollection<Language> AvailableSourceLanguages { get; } = new();
@@ -322,6 +327,7 @@ public class SettingsViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsDeepgramTtsSelected));
                 OnPropertyChanged(nameof(IsPiperTtsSelected));
                 OnPropertyChanged(nameof(IsEdgeTtsSelected));
+                OnPropertyChanged(nameof(IsElevenLabsTtsSelected));
                 _ = SaveTtsPreferencesAsync();
                 TtsProviderChanged?.Invoke(value);
                 UpdateVoiceList();
@@ -367,6 +373,18 @@ public class SettingsViewModel : ViewModelBase
             if (value)
             {
                 SelectedTtsProvider = "EdgeTts";
+            }
+        }
+    }
+
+    public bool IsElevenLabsTtsSelected
+    {
+        get => SelectedTtsProvider.Equals("ElevenLabs", StringComparison.OrdinalIgnoreCase);
+        set
+        {
+            if (value)
+            {
+                SelectedTtsProvider = "ElevenLabs";
             }
         }
     }
@@ -475,6 +493,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand SelectDeepgramTtsCommand { get; }
     public ICommand SelectPiperTtsCommand { get; }
     public ICommand SelectEdgeTtsCommand { get; }
+    public ICommand SelectElevenLabsTtsCommand { get; }
     public ICommand SwitchToPiperCommand { get; }
     public ICommand TestVoiceCommand { get; }
     public ICommand StartPiperEngineCommand { get; }
@@ -560,6 +579,62 @@ public class SettingsViewModel : ViewModelBase
     public ICommand ToggleSetupGuideCommand { get; }
     public ICommand OpenVbCableDownloadCommand { get; }
 
+    // App Version & Update Check State
+    private bool _checkForUpdatesOnStartup = true;
+    private bool _isCheckingForUpdates;
+    private string _updateStatusMessage = string.Empty;
+    private string? _updateReleaseUrl;
+    private bool _isManualUpdateAvailable;
+
+    public string AppVersionDisplay => $"v{_updateCheckService.CurrentVersion}";
+
+    public bool CheckForUpdatesOnStartup
+    {
+        get => _checkForUpdatesOnStartup;
+        set
+        {
+            if (SetProperty(ref _checkForUpdatesOnStartup, value))
+            {
+                _ = SaveUpdatePreferencesAsync();
+            }
+        }
+    }
+
+    public bool IsCheckingForUpdates
+    {
+        get => _isCheckingForUpdates;
+        set => SetProperty(ref _isCheckingForUpdates, value);
+    }
+
+    public string UpdateStatusMessage
+    {
+        get => _updateStatusMessage;
+        set
+        {
+            if (SetProperty(ref _updateStatusMessage, value))
+            {
+                OnPropertyChanged(nameof(HasUpdateStatusMessage));
+            }
+        }
+    }
+
+    public bool HasUpdateStatusMessage => !string.IsNullOrWhiteSpace(UpdateStatusMessage);
+
+    public string? UpdateReleaseUrl
+    {
+        get => _updateReleaseUrl;
+        set => SetProperty(ref _updateReleaseUrl, value);
+    }
+
+    public bool IsManualUpdateAvailable
+    {
+        get => _isManualUpdateAvailable;
+        set => SetProperty(ref _isManualUpdateAvailable, value);
+    }
+
+    public ICommand CheckForUpdatesCommand { get; }
+    public ICommand OpenLatestReleaseCommand { get; }
+
     public SettingsViewModel(
         ISecureCredentialStore? credentialStore = null,
         IDeepgramValidator? deepgramValidator = null,
@@ -572,20 +647,25 @@ public class SettingsViewModel : ViewModelBase
         DeepgramTtsService? deepgramTtsService = null,
         PiperTtsService? piperTtsService = null,
         EdgeTtsService? edgeTtsService = null,
+        ElevenLabsTtsService? elevenLabsTtsService = null,
+        IElevenLabsValidator? elevenLabsValidator = null,
         TtsPlaybackService? ttsPlaybackService = null,
         GlobalHotkeyService? hotkeyService = null,
         ITranslationPoolService? translationPoolService = null,
         ILectoTranslateValidator? lectoValidator = null,
-        IVirtualAudioRoutingService? virtualAudioRoutingService = null)
+        IVirtualAudioRoutingService? virtualAudioRoutingService = null,
+        IUpdateCheckService? updateCheckService = null)
     {
         Title = "Settings";
         _credentialStore = credentialStore ?? new SecureCredentialStore();
         _deepgramValidator = deepgramValidator ?? new DeepgramValidator();
         _googleValidator = googleValidator ?? new GoogleTranslateValidator();
         _lectoValidator = lectoValidator ?? new LectoTranslateValidator();
+        _elevenLabsValidator = elevenLabsValidator ?? new ElevenLabsValidator();
         _settingsService = settingsService ?? new SettingsService();
         _microphoneService = microphoneService ?? new MicrophoneService();
         _virtualAudioRoutingService = virtualAudioRoutingService ?? new VirtualAudioRoutingService();
+        _updateCheckService = updateCheckService ?? new UpdateCheckService();
         _argosProcessManager = argosProcessManager ?? new ArgosProcessManager();
         _argosTranslationService = argosTranslationService ?? new LocalArgosTranslationService(_argosProcessManager);
         _translationPoolService = translationPoolService ?? new TranslationPoolService(
@@ -598,6 +678,7 @@ public class SettingsViewModel : ViewModelBase
         _deepgramTtsService = deepgramTtsService ?? new DeepgramTtsService(_credentialStore);
         _piperTtsService = piperTtsService ?? new PiperTtsService(_piperProcessManager);
         _edgeTtsService = edgeTtsService ?? new EdgeTtsService(_piperProcessManager);
+        _elevenLabsTtsService = elevenLabsTtsService ?? new ElevenLabsTtsService(_credentialStore);
         _ttsPlaybackService = ttsPlaybackService ?? new TtsPlaybackService();
         _hotkeyService = hotkeyService ?? new GlobalHotkeyService();
 
@@ -635,6 +716,14 @@ public class SettingsViewModel : ViewModelBase
             "Google Cloud Translation API Key",
             "Requires enabling 'Cloud Translation API' in Google Cloud Console. Stored via Windows DPAPI.");
 
+        ElevenLabsCredentialVM = new ProviderCredentialViewModel(
+            _credentialStore,
+            key => _elevenLabsValidator.ValidateApiKeyAsync(key),
+            "ElevenLabs",
+            "VOICE OUTPUT (ELEVENLABS NEURAL TTS)",
+            "ElevenLabs API Key",
+            "Free tier provides 10,000 credits/month for personal/testing use only (commercial use requires a paid plan). Stored securely via Windows DPAPI.");
+
         // Languages
         foreach (var lang in Language.GetInitialLanguages(includeAutoDetect: true))
             AvailableSourceLanguages.Add(lang);
@@ -656,6 +745,7 @@ public class SettingsViewModel : ViewModelBase
         SelectDeepgramTtsCommand = new RelayCommand(() => SelectedTtsProvider = "Deepgram");
         SelectPiperTtsCommand = new RelayCommand(() => SelectedTtsProvider = "Piper");
         SelectEdgeTtsCommand = new RelayCommand(() => SelectedTtsProvider = "EdgeTts");
+        SelectElevenLabsTtsCommand = new RelayCommand(() => SelectedTtsProvider = "ElevenLabs");
         SwitchToPiperCommand = new RelayCommand(() => SelectedTtsProvider = "Piper");
         TestVoiceCommand = new RelayCommand(async () => await ExecuteTestVoiceAsync(), () => !IsTestingVoice);
         StartPiperEngineCommand = new RelayCommand(async () => await _piperProcessManager.StartAsync());
@@ -679,6 +769,10 @@ public class SettingsViewModel : ViewModelBase
         ToggleSetupGuideCommand = new RelayCommand(() => IsSetupGuideVisible = !IsSetupGuideVisible);
         OpenVbCableDownloadCommand = new RelayCommand(OpenVbCableDownloadPage);
 
+        // Update Check Commands
+        CheckForUpdatesCommand = new RelayCommand(async () => await CheckForUpdatesManuallyAsync(), () => !IsCheckingForUpdates);
+        OpenLatestReleaseCommand = new RelayCommand(OpenLatestReleasePage);
+
         InitializeArgosPackages();
         InitializePiperPackages();
         _ = InitializeSettingsAsync();
@@ -698,7 +792,8 @@ public class SettingsViewModel : ViewModelBase
             new ArgosPackageItem("English ↔ Russian", "ru", "en", "~75 MB"),
             new ArgosPackageItem("English ↔ Arabic", "ar", "en", "~80 MB"),
             new ArgosPackageItem("English ↔ Portuguese", "pt", "en", "~45 MB"),
-            new ArgosPackageItem("English ↔ Korean", "ko", "en", "~80 MB")
+            new ArgosPackageItem("English ↔ Korean", "ko", "en", "~80 MB"),
+            new ArgosPackageItem("English ↔ Thai", "th", "en", "~80 MB")
         };
 
         foreach (var pkg in packages)
@@ -814,7 +909,22 @@ public class SettingsViewModel : ViewModelBase
         AvailableVoices.Clear();
         var targetCode = SelectedTargetLanguage?.Code ?? "en";
 
-        if (IsEdgeTtsSelected)
+        if (IsElevenLabsTtsSelected)
+        {
+            // Curated neural voices supported across 29+ languages via eleven_multilingual_v2
+            // George and Adam are default premade voices compatible with both Free & Paid accounts
+            AvailableVoices.Add(new TtsVoiceOption("JBFqnCBsd6RMkjVDRZzb", "George (Warm / British - Free Tier OK)", targetCode, "ElevenLabs", "Male"));
+            AvailableVoices.Add(new TtsVoiceOption("pNInz6obpgDQGcFmaJgB", "Adam (Deep / Narrative - Free Tier OK)", targetCode, "ElevenLabs", "Male"));
+            AvailableVoices.Add(new TtsVoiceOption("ErXwobaYiN019PkySvjV", "Antoni (Expressive / Warm)", targetCode, "ElevenLabs", "Male"));
+            AvailableVoices.Add(new TtsVoiceOption("AZnzlk1XvdvUeBnXmlld", "Domi (Confident / Strong)", targetCode, "ElevenLabs", "Female"));
+            AvailableVoices.Add(new TtsVoiceOption("piTKgcLEGmPE4e6mEKli", "Nicole (Soft / Whisper)", targetCode, "ElevenLabs", "Female"));
+            AvailableVoices.Add(new TtsVoiceOption("21m00Tcm4TlvDq8ikWAM", "Rachel (Calm / Conversational)", targetCode, "ElevenLabs", "Female"));
+            AvailableVoices.Add(new TtsVoiceOption("N2lVS1w4EtoT3dr4eOWO", "Callum (Characters / Gaming)", targetCode, "ElevenLabs", "Male"));
+            AvailableVoices.Add(new TtsVoiceOption("IKne3meq5aSn9XLyUdCD", "Charlie (Natural / Australian)", targetCode, "ElevenLabs", "Male"));
+            AvailableVoices.Add(new TtsVoiceOption("XB0fDUnXU5powFXDhCwa", "Charlotte (Seductive / Video Games)", targetCode, "ElevenLabs", "Female"));
+            AvailableVoices.Add(new TtsVoiceOption("TX3LPaxmHKxFdv7VOQHJ", "Liam (Young / Neutral)", targetCode, "ElevenLabs", "Male"));
+        }
+        else if (IsEdgeTtsSelected)
         {
             switch (targetCode.ToLowerInvariant())
             {
@@ -859,6 +969,10 @@ public class SettingsViewModel : ViewModelBase
                 case "ar":
                     AvailableVoices.Add(new TtsVoiceOption("ar-SA-ZariyahNeural", "Zariyah (Arabic - Female)", "ar", "Edge TTS", "Female"));
                     AvailableVoices.Add(new TtsVoiceOption("ar-SA-HamedNeural", "Hamed (Arabic - Male)", "ar", "Edge TTS", "Male"));
+                    break;
+                case "th":
+                    AvailableVoices.Add(new TtsVoiceOption("th-TH-PremwadeeNeural", "Premwadee (Thai - Female)", "th", "Edge TTS", "Female"));
+                    AvailableVoices.Add(new TtsVoiceOption("th-TH-NiwatNeural", "Niwat (Thai - Male)", "th", "Edge TTS", "Male"));
                     break;
                 default:
                     AvailableVoices.Add(new TtsVoiceOption("en-US-JennyNeural", "Jenny (English US - Female)", "en", "Edge TTS", "Female"));
@@ -907,11 +1021,33 @@ public class SettingsViewModel : ViewModelBase
         var targetCode = SelectedTargetLanguage?.Code ?? "en";
         var targetName = SelectedTargetLanguage?.DisplayName ?? "Selected language";
 
+        if (IsElevenLabsTtsSelected)
+        {
+            var isElevenLabsSupported = targetCode.ToLowerInvariant() switch
+            {
+                "hi" or "zh" or "ja" or "ko" or "en" or "es" or "fr" or "de" or "pt" or "ru" or "ar" or
+                "it" or "pl" or "tr" or "nl" or "sv" or "id" or "vi" or "fil" or "uk" or "el" or "cs" or
+                "fi" or "hr" or "ms" or "sk" or "da" or "ta" or "bg" or "ro" or "hu" => true,
+                _ => false
+            };
+
+            if (isElevenLabsSupported)
+            {
+                TtsLanguageStatusMessage = $"ElevenLabs (Paid, Online) is ready for {targetName}.";
+            }
+            else
+            {
+                TtsLanguageStatusMessage = $"ElevenLabs does not support {targetName}.";
+            }
+            CanSwitchToPiper = false;
+            return;
+        }
+
         if (IsEdgeTtsSelected)
         {
             var isEdgeSupported = targetCode.ToLowerInvariant() switch
             {
-                "hi" or "zh" or "ja" or "ko" or "en" or "es" or "fr" or "de" or "pt" or "ru" or "ar" => true,
+                "hi" or "zh" or "ja" or "ko" or "en" or "es" or "fr" or "de" or "pt" or "ru" or "ar" or "th" => true,
                 _ => false
             };
 
@@ -979,18 +1115,22 @@ public class SettingsViewModel : ViewModelBase
             var targetCode = SelectedTargetLanguage?.Code ?? "en";
             var text = targetCode.Equals("zh", StringComparison.OrdinalIgnoreCase)
                 ? "你好，这是语音输出测试。"
-                : (targetCode.Equals("es", StringComparison.OrdinalIgnoreCase)
-                    ? "Hola, esta es una prueba de salida de voz."
-                    : "Hello, this is a test of the gaming voice output system.");
+                : (targetCode.Equals("hi", StringComparison.OrdinalIgnoreCase)
+                    ? "नमस्ते, यह गेमिंग वॉइस आउटपुट का परीक्षण है।"
+                    : (targetCode.Equals("es", StringComparison.OrdinalIgnoreCase)
+                        ? "Hola, esta es una prueba de salida de voz."
+                        : "Hello, this is a test of the gaming voice output system."));
 
             var options = new TtsOptions(
                 Voice: SelectedVoice?.Id,
                 Volume: _ttsVolume / 100.0,
                 Speed: _ttsSpeed);
 
-            ITextToSpeechService service = IsEdgeTtsSelected
-                ? _edgeTtsService
-                : (IsPiperTtsSelected ? _piperTtsService : _deepgramTtsService);
+            ITextToSpeechService service = IsElevenLabsTtsSelected
+                ? _elevenLabsTtsService
+                : (IsEdgeTtsSelected
+                    ? _edgeTtsService
+                    : (IsPiperTtsSelected ? _piperTtsService : _deepgramTtsService));
 
             var supported = await service.IsLanguageSupportedAsync(targetCode);
             if (!supported)
@@ -1045,11 +1185,24 @@ public class SettingsViewModel : ViewModelBase
     private async Task DownloadPackageAsync(ArgosPackageItem item)
     {
         item.IsDownloading = true;
-        item.StatusText = "Downloading model (1/2)...";
+        item.StatusText = "Connecting to offline engine...";
 
         try
         {
+            if (!_argosProcessManager.IsRunning)
+            {
+                item.StatusText = "Starting offline translation engine...";
+                var started = await _argosProcessManager.EnsureStartedAsync();
+                if (!started)
+                {
+                    item.StatusText = $"Engine offline: {_argosProcessManager.StatusMessage}";
+                    return;
+                }
+            }
+
+            item.StatusText = "Downloading model (1/2)...";
             var success1 = await _argosTranslationService.InstallPackageAsync(item.FromCode, item.ToCode);
+
             item.StatusText = "Downloading reverse model (2/2)...";
             var success2 = await _argosTranslationService.InstallPackageAsync(item.ToCode, item.FromCode);
 
@@ -1061,7 +1214,7 @@ public class SettingsViewModel : ViewModelBase
             }
             else
             {
-                item.StatusText = "Download failed. Check internet.";
+                item.StatusText = "Download failed. Check internet connection.";
             }
         }
         catch (Exception ex)
@@ -1120,6 +1273,8 @@ public class SettingsViewModel : ViewModelBase
             OnPropertyChanged(nameof(SelectedTtsProvider));
             OnPropertyChanged(nameof(IsDeepgramTtsSelected));
             OnPropertyChanged(nameof(IsPiperTtsSelected));
+            OnPropertyChanged(nameof(IsEdgeTtsSelected));
+            OnPropertyChanged(nameof(IsElevenLabsTtsSelected));
         }
 
         _ttsVolume = settings.TtsVolume * 100.0;
@@ -1170,6 +1325,10 @@ public class SettingsViewModel : ViewModelBase
         _ttsPlaybackService.VirtualDeviceName = settings.VirtualAudioDeviceName;
         OnPropertyChanged(nameof(PlayTtsThroughSpeakers));
         OnPropertyChanged(nameof(RouteTtsToVirtualDevice));
+
+        // Initialize update preferences
+        _checkForUpdatesOnStartup = settings.CheckForUpdatesOnStartup;
+        OnPropertyChanged(nameof(CheckForUpdatesOnStartup));
 
         await LoadVirtualDevicesAsync(settings.VirtualAudioDeviceId, settings.VirtualAudioDeviceName);
     }
@@ -1646,6 +1805,80 @@ public class SettingsViewModel : ViewModelBase
         finally
         {
             IsAddProviderTesting = false;
+        }
+    }
+
+    #endregion
+
+    #region Update Checking Methods
+
+    private async Task SaveUpdatePreferencesAsync()
+    {
+        try
+        {
+            var settings = await _settingsService.LoadSettingsAsync();
+            settings.CheckForUpdatesOnStartup = _checkForUpdatesOnStartup;
+            await _settingsService.SaveSettingsAsync(settings);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to save update check preferences.", ex);
+        }
+    }
+
+    public async Task CheckForUpdatesManuallyAsync()
+    {
+        if (IsCheckingForUpdates)
+            return;
+
+        IsCheckingForUpdates = true;
+        UpdateStatusMessage = "Checking GitHub Releases...";
+        IsManualUpdateAvailable = false;
+        UpdateReleaseUrl = null;
+
+        try
+        {
+            var result = await _updateCheckService.CheckForUpdateAsync();
+            if (result == null)
+            {
+                UpdateStatusMessage = "Unable to reach GitHub. Please check your internet connection.";
+            }
+            else if (result.IsUpdateAvailable)
+            {
+                UpdateStatusMessage = $"🎉 New version v{result.LatestVersion} is available!";
+                UpdateReleaseUrl = result.ReleaseUrl;
+                IsManualUpdateAvailable = true;
+            }
+            else
+            {
+                UpdateStatusMessage = $"✓ You are running the latest version ({AppVersionDisplay}).";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error checking for updates manually.", ex);
+            UpdateStatusMessage = "Check failed. Please try again later.";
+        }
+        finally
+        {
+            IsCheckingForUpdates = false;
+        }
+    }
+
+    private void OpenLatestReleasePage()
+    {
+        try
+        {
+            var url = UpdateReleaseUrl ?? "https://github.com/kunsahil42-cpu/translator/releases";
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to open release page.", ex);
         }
     }
 

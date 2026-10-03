@@ -52,4 +52,9 @@ public class ApiSettings
     public bool RouteTtsToVirtualDevice { get; set; } = false;
     public string? VirtualAudioDeviceId { get; set; }
     public string? VirtualAudioDeviceName { get; set; }
+
+    // Update Notification Preferences
+    public bool CheckForUpdatesOnStartup { get; set; } = true;
+    public string? DismissedUpdateVersion { get; set; }
+    public string? LastCheckedLatestVersion { get; set; }
 }

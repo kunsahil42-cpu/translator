@@ -83,6 +83,10 @@ public class TranslatorViewModel : ViewModelBase
             if (SetProperty(ref _selectedSourceLanguage, value) && value != null)
             {
                 _ = SaveLanguagePreferencesAsync();
+                if (IsListening)
+                {
+                    _ = RestartSessionForLanguageChangeAsync();
+                }
             }
         }
     }
@@ -232,6 +236,42 @@ public class TranslatorViewModel : ViewModelBase
         catch (Exception ex)
         {
             Logger.Error("Failed to save language preferences in TranslatorViewModel.", ex);
+        }
+    }
+
+    private async Task RestartSessionForLanguageChangeAsync()
+    {
+        try
+        {
+            await _microphoneService.StopCaptureAsync();
+            await _speechService.DisconnectAsync();
+
+            var deepgramKey = await _credentialStore.GetApiKeyAsync("Deepgram");
+            if (string.IsNullOrWhiteSpace(deepgramKey))
+                return;
+
+            var srcLang = SelectedSourceLanguage?.Code ?? "hi";
+            var options = new SpeechToTextOptions
+            {
+                SourceLanguage = (srcLang == "auto") ? "en" : srcLang,
+                Model = "nova-2",
+                SampleRate = 16000,
+                Channels = 1,
+                InterimResults = true,
+                SmartFormat = true,
+                EndpointingMs = 300
+            };
+
+            await _speechService.ConnectAsync(options, deepgramKey);
+            if (SelectedDevice != null)
+            {
+                await _microphoneService.StartCaptureAsync(SelectedDevice);
+            }
+            StatusMessage = $"Listening live on {SelectedDevice?.Name}... ({SelectedSourceLanguage?.DisplayName} → {SelectedTargetLanguage?.DisplayName})";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to reconnect Deepgram for source language switch.", ex);
         }
     }
 

@@ -7,6 +7,7 @@
         xmlns:views="clr-namespace:GamingLiveTranslator.Views"
         mc:Ignorable="d"
         Title="Gaming Live Translator"
+        Icon="/Resources/Icons/app.ico"
         Height="720" Width="1160"
         MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
@@ -78,12 +79,12 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Ellipse Style="{StaticResource StatusDotStyle}" Fill="{StaticResource StatusConnectedBrush}" />
-                            <TextBlock Text="Engine v1.0.0"
+                            <TextBlock Text="{Binding AppVersionDisplay, StringFormat='Engine {0}'}"
                                        FontFamily="{StaticResource AppFontFamily}"
                                        FontSize="11" FontWeight="SemiBold"
                                        Foreground="{StaticResource TextPrimaryBrush}" />
                         </StackPanel>
-                        <TextBlock Text="Phase 6 HUD Overlay"
+                        <TextBlock Text="Ready &amp; Active"
                                    FontFamily="{StaticResource AppFontFamily}"
                                    FontSize="10"
                                    Foreground="{StaticResource TextMutedBrush}"
@@ -135,9 +136,53 @@
             </DockPanel>
         </Border>
 
-        <!-- Right Content Area: Swappable Views via DataTemplates -->
-        <ContentControl Grid.Column="1"
-                        Content="{Binding CurrentView}"
-                        Focusable="False" />
+        <!-- Right Content Area: Dismissible Banner & Swappable Views via DataTemplates -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Non-blocking Dismissible Update Notification Banner -->
+            <Border Grid.Row="0"
+                    Background="#1E293B"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="0,0,0,1.5"
+                    Padding="16,10"
+                    Visibility="{Binding IsUpdateNoticeVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="🔔" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Update available: " FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding UpdateNoticeMessage}" FontSize="13" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Button Content="View Release ↗"
+                                Command="{Binding ViewReleaseCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Padding="12,6" FontSize="11" Margin="0,0,8,0" />
+                        <Button Content="Dismiss"
+                                Command="{Binding DismissUpdateNoticeCommand}"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Padding="10,6" FontSize="11" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Active View Content -->
+            <ContentControl Grid.Row="1"
+                            Content="{Binding CurrentView}"
+                            Focusable="False" />
+        </Grid>
     </Grid>
 </Window>

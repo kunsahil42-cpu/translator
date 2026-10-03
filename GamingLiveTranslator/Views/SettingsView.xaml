@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="GamingLiveTranslator.Views.SettingsView"
+<UserControl x:Class="GamingLiveTranslator.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -531,30 +531,39 @@
 
                     <!-- Provider Selection -->
                     <TextBlock Text="TTS PROVIDER" Style="{StaticResource TextSubtitle}" Margin="0,0,0,8" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <RadioButton Content="Deepgram Aura (Online - EN / ES only)"
+                    <WrapPanel Margin="0,0,0,16">
+                        <RadioButton Content="Deepgram Aura (EN / ES only)"
                                      IsChecked="{Binding IsDeepgramTtsSelected}"
                                      Command="{Binding SelectDeepgramTtsCommand}"
                                      GroupName="TtsProviderGroup"
                                      Foreground="{StaticResource TextPrimaryBrush}"
                                      FontSize="13" FontWeight="SemiBold"
-                                     Margin="0,0,24,0" />
+                                     Margin="0,0,24,8" />
 
-                        <RadioButton Content="Piper-plus (100% Offline Engine)"
+                        <RadioButton Content="Piper-plus (Offline)"
                                      IsChecked="{Binding IsPiperTtsSelected}"
                                      Command="{Binding SelectPiperTtsCommand}"
                                      GroupName="TtsProviderGroup"
                                      Foreground="{StaticResource TextPrimaryBrush}"
                                      FontSize="13" FontWeight="SemiBold"
-                                     Margin="0,0,24,0" />
+                                     Margin="0,0,24,8" />
 
                         <RadioButton Content="Edge TTS (Free, Online, Unofficial)"
                                      IsChecked="{Binding IsEdgeTtsSelected}"
                                      Command="{Binding SelectEdgeTtsCommand}"
                                      GroupName="TtsProviderGroup"
                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                     FontSize="13" FontWeight="SemiBold" />
-                    </StackPanel>
+                                     FontSize="13" FontWeight="SemiBold"
+                                     Margin="0,0,24,8" />
+
+                        <RadioButton Content="ElevenLabs (Paid, Online)"
+                                     IsChecked="{Binding IsElevenLabsTtsSelected}"
+                                     Command="{Binding SelectElevenLabsTtsCommand}"
+                                     GroupName="TtsProviderGroup"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     FontSize="13" FontWeight="SemiBold"
+                                     Margin="0,0,0,8" />
+                    </WrapPanel>
 
                     <!-- Persistent Standing Warning Banner for Edge TTS -->
                     <Border Background="#332B00"
@@ -572,6 +581,25 @@
                             </StackPanel>
                             <TextBlock Text="It requires an active internet connection (unlike Piper's offline voices)." 
                                        Foreground="#FFE082" Margin="18,0,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Persistent Note Banner for ElevenLabs -->
+                    <Border Background="#1C2D42"
+                            BorderBrush="#4C9EFF"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="14,10"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding IsElevenLabsTtsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="ℹ " FontWeight="Bold" Foreground="#64B5F6" FontSize="14"/>
+                                <TextBlock Text="ElevenLabs is a paid cloud provider with 70+ neural languages." 
+                                           FontWeight="SemiBold" Foreground="#E3F2FD" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Text="Free tier is strictly for personal/testing use only (commercial use requires a paid subscription). Requires an ElevenLabs API key entered below." 
+                                       Foreground="#BBDEFB" Margin="18,0,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
 
@@ -774,6 +802,9 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+
+            <!-- Card 6a: Voice Output (ElevenLabs Neural TTS) Credential Card -->
+            <controls:ProviderApiKeyCard DataContext="{Binding ElevenLabsCredentialVM}" />
 
             <!-- Card 6b: Voice Output Routing (Discord / In-Game Voice Chat) -->
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
@@ -1015,6 +1046,56 @@
                     <!-- Supported Alternate Inputs Notice -->
                     <TextBlock Text="Supports standard keyboard keys (F1-F12, Caps Lock, Space, Tilde, Alt, etc.) and gaming mouse thumb buttons (Mouse 4 &amp; 5)."
                                FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 8: App Version & Updates -->
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,20" Padding="20">
+                <StackPanel>
+                    <DockPanel LastChildFill="False" Margin="0,0,0,12">
+                        <TextBlock Text="APP VERSION &amp; UPDATES" Style="{StaticResource TextCardTitle}" DockPanel.Dock="Left" VerticalAlignment="Center" />
+                        <Border Background="{StaticResource CardElevatedBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3" DockPanel.Dock="Right">
+                            <TextBlock Text="{Binding AppVersionDisplay}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                    </DockPanel>
+
+                    <TextBlock Text="Gaming Live Translator checks GitHub Releases for new updates. Updates are notify-only: the application will never auto-download, auto-install, or overwrite your files without your explicit consent."
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                    <!-- Startup Check Toggle -->
+                    <CheckBox IsChecked="{Binding CheckForUpdatesOnStartup}" Margin="0,0,0,16">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Check for updates on startup" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="Checks GitHub once per launch. Fails silently if offline or unreachable." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </CheckBox>
+
+                    <!-- Manual Check Controls & Status -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Content="🔍  Check for Updates Now"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Padding="16,8" FontSize="12" Margin="0,0,12,0" />
+
+                        <Button Content="View Release ↗"
+                                Command="{Binding OpenLatestReleaseCommand}"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Padding="14,8" FontSize="12"
+                                Visibility="{Binding IsManualUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </StackPanel>
+
+                    <!-- Update Status Message Banner -->
+                    <Border Background="{StaticResource CardElevatedBackgroundBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,10"
+                            Visibility="{Binding HasUpdateStatusMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding UpdateStatusMessage}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
                 </StackPanel>
             </Border>
 

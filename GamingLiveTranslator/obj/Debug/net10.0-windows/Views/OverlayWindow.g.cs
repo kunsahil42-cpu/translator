@@ -68,7 +68,7 @@ namespace GamingLiveTranslator.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/GamingLiveTranslator;component/views/overlaywindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Ttranslator;V2.0.0;component/views/overlaywindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\OverlayWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

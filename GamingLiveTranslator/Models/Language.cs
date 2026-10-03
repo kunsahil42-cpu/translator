@@ -44,6 +44,7 @@ public class Language
         list.Add(new Language("pt", "🇵🇹 Portuguese", "Português"));
         list.Add(new Language("ru", "🇷🇺 Russian", "Русский"));
         list.Add(new Language("ar", "🇸🇦 Arabic", "العربية"));
+        list.Add(new Language("th", "🇹🇭 Thai", "ไทย"));
 
         return list;
     }

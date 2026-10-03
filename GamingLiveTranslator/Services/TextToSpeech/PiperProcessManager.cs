@@ -123,7 +123,7 @@ public class PiperProcessManager : IDisposable
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = Path.GetDirectoryName(scriptPath) ?? AppDomain.CurrentDomain.BaseDirectory
+                WorkingDirectory = Path.GetDirectoryName(scriptPath) ?? AppContext.BaseDirectory
             };
             startInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
 
@@ -308,6 +308,19 @@ public class PiperProcessManager : IDisposable
 
     public static string ResolveModelsDir()
     {
+        var baseDir = AppContext.BaseDirectory;
+
+        // 1. Check companion models directories alongside application
+        var bundled1 = Path.Combine(baseDir, "Resources", "models", "piper");
+        if (Directory.Exists(bundled1)) return bundled1;
+
+        var bundled2 = Path.Combine(baseDir, "Resources", "PythonRuntime", "models");
+        if (Directory.Exists(bundled2)) return bundled2;
+
+        var bundled3 = Path.Combine(baseDir, "models", "piper");
+        if (Directory.Exists(bundled3)) return bundled3;
+
+        // 2. Fall back to local app data
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var dir = Path.Combine(localAppData, "GamingLiveTranslator", "models", "piper");
         if (!Directory.Exists(dir))
@@ -319,34 +332,64 @@ public class PiperProcessManager : IDisposable
 
     private static string ResolvePythonPath()
     {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var baseDir = AppContext.BaseDirectory;
 
-        // 1. Bundled application PythonRuntime
-        var bundled = Path.Combine(baseDir, "PythonRuntime", "python.exe");
-        if (File.Exists(bundled)) return bundled;
+        // 1. Check companion Resources/PythonRuntime folder (prefer venv Scripts\python.exe)
+        var resPythonScripts = Path.Combine(baseDir, "Resources", "PythonRuntime", "Scripts", "python.exe");
+        if (File.Exists(resPythonScripts)) return resPythonScripts;
 
+        var resPython = Path.Combine(baseDir, "Resources", "PythonRuntime", "python.exe");
+        if (File.Exists(resPython)) return resPython;
+
+        // 2. Bundled application PythonRuntime (prefer venv Scripts\python.exe)
         var bundledScripts = Path.Combine(baseDir, "PythonRuntime", "Scripts", "python.exe");
         if (File.Exists(bundledScripts)) return bundledScripts;
 
-        // 2. Local workspace virtual environment (test_env)
+        var bundled = Path.Combine(baseDir, "PythonRuntime", "python.exe");
+        if (File.Exists(bundled)) return bundled;
+
+        // 3. Local workspace virtual environment (test_env)
         var testEnv = Path.Combine(baseDir, "test_env", "Scripts", "python.exe");
         if (File.Exists(testEnv)) return testEnv;
 
         var parentTestEnv = Path.Combine(baseDir, "..", "..", "..", "test_env", "Scripts", "python.exe");
         if (File.Exists(parentTestEnv)) return Path.GetFullPath(parentTestEnv);
 
+        var publishParentTestEnv = Path.Combine(baseDir, "..", "..", "..", "..", "test_env", "Scripts", "python.exe");
+        if (File.Exists(publishParentTestEnv)) return Path.GetFullPath(publishParentTestEnv);
+
+        // 4. Fallback: Check known workspace / publish paths on developer machine
+        var devPublishEnv = @"D:\pubgpc ch\GamingLiveTranslator\bin\Release\net10.0-windows\win-x64\publish\Resources\PythonRuntime\Scripts\python.exe";
+        if (File.Exists(devPublishEnv)) return devPublishEnv;
+
+        var devTestEnv = @"D:\pubgpc ch\GamingLiveTranslator\test_env\Scripts\python.exe";
+        if (File.Exists(devTestEnv)) return devTestEnv;
+
         return string.Empty;
     }
 
     private static string ResolveScriptPath()
     {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var baseDir = AppContext.BaseDirectory;
 
         var script1 = Path.Combine(baseDir, "Resources", "PythonRuntime", "tts_server.py");
         if (File.Exists(script1)) return script1;
 
         var script2 = Path.Combine(baseDir, "..", "..", "..", "Resources", "PythonRuntime", "tts_server.py");
         if (File.Exists(script2)) return Path.GetFullPath(script2);
+
+        var script3 = Path.Combine(baseDir, "..", "..", "..", "..", "Resources", "PythonRuntime", "tts_server.py");
+        if (File.Exists(script3)) return Path.GetFullPath(script3);
+
+        var script4 = Path.Combine(baseDir, "tts_server.py");
+        if (File.Exists(script4)) return script4;
+
+        // Fallback: Check known workspace paths
+        var devPublishScript = @"D:\pubgpc ch\GamingLiveTranslator\bin\Release\net10.0-windows\win-x64\publish\Resources\PythonRuntime\tts_server.py";
+        if (File.Exists(devPublishScript)) return devPublishScript;
+
+        var devScript = @"D:\pubgpc ch\GamingLiveTranslator\Resources\PythonRuntime\tts_server.py";
+        if (File.Exists(devScript)) return devScript;
 
         return string.Empty;
     }
