@@ -519,6 +519,10 @@ Thank you for checking out **Gaming Live Translator**! 🎮🌐
 
 ---
 
+---
+
+---
+
 ## 📸 Screenshots
 
 ### 📊 Dashboard
@@ -533,8 +537,24 @@ Thank you for checking out **Gaming Live Translator**! 🎮🌐
 
 ![Gaming Live Translator Overlay](docs/screenshots/overlay.png)
 
+### 🪟 Overlay View
+
+![Gaming Live Translator Overlay View](docs/screenshots/overlay1.png)
+
 ### ⚙️ Settings
 
 ![Gaming Live Translator Settings](docs/screenshots/settings.png)
+
+### 🔊 Text-to-Speech
+
+![Gaming Live Translator TTS](docs/screenshots/tts.png)
+
+### 🎤 Speech-to-Text
+
+![Gaming Live Translator STT](docs/screenshots/stt.png)
+
+### 🔧 Additional Configuration
+
+![Gaming Live Translator Configuration](docs/screenshots/supoflan.png)
 
 ---
