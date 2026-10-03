@@ -1,0 +1,30 @@
+# .NET build output
+GamingLiveTranslator/bin/
+GamingLiveTranslator/obj/
+
+# Visual Studio
+GamingLiveTranslator/.vs/
+*.user
+*.suo
+
+# Python cache
+GamingLiveTranslator/**/__pycache__/
+GamingLiveTranslator/**/*.py[cod]
+
+# Python virtual environments
+GamingLiveTranslator/venv/
+GamingLiveTranslator/.venv/
+GamingLiveTranslator/test_env/
+
+# Local .NET data
+.dotnet_cli/
+.appdata/
+
+# Logs
+*.log
+stderr.txt
+stdout.txt
+
+# OS
+.DS_Store
+Thumbs.db
